@@ -1,38 +1,130 @@
-.App {
+html {
+  background-color: #c5c4c4;
+  text-align: left;  
+  scroll-behavior: smooth;
+}
+
+.row {
+  width: 100%;
+  vertical-align: middle;
+}
+.column {
+  width: 50%;
+  display: inline-block;
+}
+
+@media only screen and (min-width: 700px) {
+  
+}
+
+.TextBlock {
+  line-height: 200%;
+}
+.textArea {
+  background: none;
+  border-width: 2px;
+  border-radius: 10px;
+  resize: none;
+  border-color: rgb(16, 16, 119);
+}
+
+.bioForm {
+  height: 150px;
+  width: 400px;
+}
+
+.siteWrapper {
+  min-height: 100vh; 
+  display: flex;
+  flex-direction: column; 
+}
+
+.Link {
+  color: black;
+  text-decoration: none;
+}
+
+.showBreaks {
+  white-space: pre-wrap;
+}
+
+.Footer {
+  width: auto;
+  background-color: #333;
+  color: white;
+  height: 50px;
+  padding-left: 20px;
+  padding-top: 20px;
+}
+
+.Page {
+  margin: 20px;
+  font-family: "Georgia";
+  flex: 1 0 auto;
+}
+
+.Header  {
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.Nav {
+  list-style-type: none;
+  margin: 0px;
+  padding: 0px;
+  background-color: #333;
+  overflow: hidden;
+  position: sticky;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+.NavLink {
+  float: left;
+  display: block;
+  padding: 15px 20px;
   color: white;
+  text-decoration: none;
+  text-align: center;
 }
 
-.App-link {
-  color: #61dafb;
+.NavLink:hover, .NavActive {
+  background-color: rgb(16, 16, 119);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.Button {
+  background-color: rgb(16, 16, 119);
+  color: white;
+  border-radius: 5px;
 }
+
+.Button:hover {
+  background-color: rgb(86, 86, 184);
+}
+
+.TextField {
+  background: none;
+  border-width: 2px;
+  border-radius: 5px;
+  resize: none;
+  border-color: rgb(16, 16, 119);
+}
+
+.NavRight {
+  float: right;
+}
+
+.DataList {
+  border-bottom-style: solid;
+  border-width: 2px;
+  border-collapse: collapse;
+}
+
+.DataListItem {
+  padding: 5px;
+}
+
+.pfpBig {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
