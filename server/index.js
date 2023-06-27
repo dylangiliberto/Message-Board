@@ -401,6 +401,7 @@ app.use("/likeComment", async (req, res) => {
     res.send(false);
   }
 });
+//jonathan
 
 app.use("/updateBio", async (req, res) => {
   const bio = req.body.bio;
