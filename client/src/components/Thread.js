@@ -13,6 +13,7 @@ export default function Thread({ sessionData }) {
     let [comments, setComments] = useState(0);
     let [threadData, setThreadData] = useState(0);   
     let [forbidden, setForbidden] = useState(false);
+    let [loadedAndNotForbidden, setLoadedAndNotForbidden] = useState(false);
     let [pfp, setPfp] = useState("");
     const { threadID } = useParams();
 
@@ -29,30 +30,31 @@ export default function Thread({ sessionData }) {
             id: threadID,
             requestDeleted: sessionData?.user?.administrator})
         });
-        console.log('TEST' + sessionData?.user?.username);
-        console.log('TEST' + sessionData?.user?.administrator);
+        //console.log('TEST' + sessionData?.user?.username);
+        //console.log('TEST' + sessionData?.user?.administrator);
         if(f.status === 403) {
           setForbidden(true);
+          setLoadedAndNotForbidden(false);
         }
         else {
           let res = await f.json();
           setComments(res.comments);
           setThreadData(res.thread[0]);
           setPfp(res.pfp);
+          setLoadedAndNotForbidden(true);
         }
       }
       f();
     }, []);
 
+    let commentsTable;
     let head = (
       <div>
         <ThreadHeader sessionData={sessionData} threadData={threadData} setComments={setComments} setForbidden={setForbidden} />
         <ThreadManager sessionData={sessionData} threadData={threadData} setForbidden={setForbidden} setThreadData={setThreadData} />
       </div>
-    );
-
-    let commentsTable;
-    if(comments[0]) {
+   );
+    if(comments[0]?.username) {
       commentsTable = (
         <div className="Page">
           
@@ -71,17 +73,22 @@ export default function Thread({ sessionData }) {
 
     let noComments = (
       <div className='Page'>
-        <h1>
-          It's empty :(
-        </h1>
+        <div className="commentWrapper">
+          <div className="commentBodyWrapper">
+            <h1>
+              It's empty :(
+            </h1>
+            But you could be the first to post!
+          </div>
+        </div>
       </div>
     );
  
-    if(threadData && forbidden === false){
+    if(loadedAndNotForbidden === true){
       return(
         <div>
           {head}
-          {comments[0] ? commentsTable : noComments}
+          {comments[0]?.username ? commentsTable : noComments}
         </div>
       );
     }

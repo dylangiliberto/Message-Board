@@ -1,11 +1,11 @@
 var mysql = require('mysql');
-import { db_password, db_username } from './passwords';
+var pwd = require('./passwords');
 
 function getConnection(){
     var con = mysql.createConnection({
         host: "127.0.0.1",
-        user: db_username,
-        password: db_password,
+        user: pwd.db_username,
+        password: pwd.db_password,
         database: "MessageBoard",
         charset: "utf8mb4_unicode_ci"
     });

@@ -346,12 +346,12 @@ app.use("/comments", async (req, res) => {
       let comments = await db.getComments(con, threadID, user, sendDeleted);
       let thread = await db.getThreadData(con, threadID);
       let topReplies = {ID: 0};
-      comments.forEach(async (e) =>  {
-        console.log( await db.getTopTwoReplies(con, e.ID));
-      });
+      //comments.forEach(async (e) =>  {
+      //  console.log( await db.getTopTwoReplies(con, e.ID));
+      //});
       db.loggedIn(con, user);
       //console.log({comments: comments});
-      res.send({comments: comments, thread: thread, topReplies: topReplies});
+      res.send({comments: comments[0] ? comments : {}, thread: thread, topReplies: topReplies});
     }
     else {
       res.sendStatus(403);
