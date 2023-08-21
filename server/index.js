@@ -127,18 +127,12 @@ app.use("/postComment", upload.single('image'), async (req, res) => {
 });
 
 app.get('/images/:imageName', (req, res) => {
-  // do a bunch of if statements to make sure the user is 
-  // authorized to view this image, then
-
   const imageName = req.params.imageName;
   const readStream = fs.createReadStream(`images/${imageName}`);
   readStream.pipe(res);
 });
 
 app.get('/pfp/:imageName', (req, res) => {
-  // do a bunch of if statements to make sure the user is 
-  // authorized to view this image, then
-
   const imageName = req.params.imageName;
   const readStream = fs.createReadStream(`pfp/${imageName}`);
   readStream.pipe(res);
@@ -151,7 +145,10 @@ app.use("/deleteComment", async (req, res) => {
   let thread = req.body.thread;
   let setDeleted = req.body.setDeleted;
   let verified = await sessions.verify(con, SID, user);
-  if(comment && user && SID && thread && verified){
+  let author = await db.isCommentAuthor(con, comment, user);
+  let admin = await db.isAdministrator(con, user);
+  
+  if(comment && user && SID && thread && verified && (author || admin)){
     console.log("Deleteing/Restoring Comment ID: " + comment.ID + " User: " + user + " SID: " + SID + "SetDeleted: " + setDeleted);
     db.deleteComment(con, setDeleted, comment.ID, thread);
     let comments = await db.getComments(con, thread, user, req.body.requestDeleted);
@@ -170,6 +167,7 @@ app.use("/deleteCommentPerm", async (req, res) => {
   let thread = req.body.thread;
   let verified = await sessions.verify(con, SID, user);
   let admin = await db.isAdministrator(con, user);
+
   if(comment && user && SID && thread && verified && admin){
     console.log("Permanently Deleteing Comment ID: " + comment + " User: " + user + " SID: " + SID);
     db.deleteCommentPerm(con, comment, thread);

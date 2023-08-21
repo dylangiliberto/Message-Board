@@ -144,7 +144,9 @@ export default function Comment({ comment, sessionData, threadID, setComments })
                         </Link>
                     </td>
                     <td>
-                        {deleteButton}
+                        {(sessionData?.user?.username === comment['username'] ||
+                            sessionData?.user?.administrator == true)? 
+                            deleteButton : <span></span>}
                     </td>
                     <td>
                         {comment['deleted'] ? deletePermButton : ""}
