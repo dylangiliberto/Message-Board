@@ -147,7 +147,6 @@ app.use("/deleteComment", async (req, res) => {
   let verified = await sessions.verify(con, SID, user);
   let author = await db.isCommentAuthor(con, comment, user);
   let admin = await db.isAdministrator(con, user);
-  
   if(comment && user && SID && thread && verified && (author || admin)){
     console.log("Deleteing/Restoring Comment ID: " + comment.ID + " User: " + user + " SID: " + SID + "SetDeleted: " + setDeleted);
     db.deleteComment(con, setDeleted, comment.ID, thread);
