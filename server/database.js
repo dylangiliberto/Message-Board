@@ -148,6 +148,24 @@ function loggedIn(con, username) {
     con.query(sql, [username]);
 }
 
+function isCommentAuthor(con, comment, username) {
+    let sql = "SELECT `username` FROM  `comment` WHERE `id` = ?";
+    console.log(comment.ID + " " + username);
+    return new Promise(function(resolve, reject) {
+        con.query(sql, [comment.ID], function (err, result) {
+            if(err)
+                return reject(err);
+            if(result){
+                if(result[0].username === username)
+                    resolve(true);
+                resolve(false);
+            }
+            else
+                resolve(false);
+        }
+    )});
+}
+
 function postComment(con, comment, thread, username, imageURL) {
     let sql = "INSERT INTO `comment` (username, thread, body, title, imageURL) VALUES (?,?,?,?,?)";
     con.query(sql, [username, thread, comment, "No Title", imageURL]);
@@ -367,7 +385,7 @@ function isAdministrator(con, username) {
             con.query(sql, [username], function (err, result) {
                 if(err)
                     return reject(err);
-                resolve(result);
+                resolve(result[0].administrator);
             }
         )});
     }
@@ -379,4 +397,4 @@ function isAdministrator(con, username) {
 module.exports = { getConnection, getVersion, getHashword, getUserData, createUser, doesSIDExist, doesUserExist, getSession, getUserSessions, 
     createSession, destroySession, postComment, getComments, isCommentLiked, likeComment, unlikeComment, getThreadData, deleteComment, deleteCommentPerm,
     loggedIn, createThread, lockThread, deleteThread, archiveThread, updateBio, updatePfp, updateUsername, updateDisplayName, isAdministrator,
-    getTopTwoReplies };
+    getTopTwoReplies, isCommentAuthor };
