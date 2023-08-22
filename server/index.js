@@ -105,7 +105,7 @@ app.use("/postComment", upload.single('image'), async (req, res) => {
     let file = req.file ? req.file.path : "No Image";
     console.log("File Path: " + file);
     console.log("Verified?: " + verified);
-    if(verified === true && user && req.body.comment && thread){
+    if(verified === true && user && (req.body.comment || file) && thread){
       console.log("Verified! Posting Comment! Username: " + user);
       db.postComment(con, req.body.comment, thread, user, file);
         //const imagePath = req.file.path;
