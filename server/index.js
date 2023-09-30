@@ -1,3 +1,6 @@
+const https = require("https");
+const fs = request("fs");
+
 const express = require("express");
 const cors = require('cors');
 var mysql = require('mysql');
@@ -17,9 +20,17 @@ const fs = require('fs');
 
 let con = db.getConnection();
 
+https.createServer(app).listen(4000, () => {
+  console.log("HTTPS NodeJS Server running on port 4000. Thanks. See you.")
+});
+
 app.use(cors());
 app.use(express.json());
 //app.use(express.urlencoded({ extended: true }));
+
+app.use("/", (req, res) => {
+  res.send("What are you doing here?");
+})
 
 app.use("/api", (req, res) => {
     res.send({
