@@ -25,3 +25,7 @@ client/yarn-error.log*
 # DB Passwords File
 
 server/passwords.js
+
+#Deployment Tools
+
+deployment
