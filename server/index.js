@@ -1,4 +1,3 @@
-const httpsModule = require("https");
 const httpModule = require('http');
 const fs = require('fs');
 const express = require("express");
@@ -17,10 +16,6 @@ const multer = require('multer');
 const upload = multer({ dest: 'images/' });
 const uploadPfp = multer({ dest: 'pfp/' });
 const PORT = process.env.PORT || 3001;
-
-httpsModule.createServer(app).listen(4000,()=>{
-  console.log("HTTPS NodeJS Server listening on port 4000. Thanks. See you.")
-});
 
 httpModule.createServer(app).listen(PORT, () => {
   console.log(`HTTP  NodeJS Server listening on port ${PORT}`);
