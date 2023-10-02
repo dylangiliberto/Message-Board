@@ -13,7 +13,7 @@ export default function Post({sessionData}) {
 
     useEffect(() => {
         async function f() {
-          let cUrl = "http://dylangiliberto.com:3001/replies";
+          let cUrl = "https://api.board.dylangiliberto.com/replies";
           let f = await fetch(cUrl, {
             method: 'POST',
             headers: {
@@ -42,11 +42,11 @@ export default function Post({sessionData}) {
             <div>
                 <UserProfileDisplay comment={post} />
                 <h3>{post.body}</h3>
-                <a href={'http://dylangiliberto.com:3001/' + post['imageURL']} target='_blank'>
+                <a href={'https://api.board.dylangiliberto.com/' + post['imageURL']} target='_blank'>
                 {
                     post['imageURL'] && post['imageURL'] !== "No Image" 
                     ? 
-                    <img className="image" src={"http://dylangiliberto.com:3001/" + post['imageURL']}/>
+                    <img className="image" src={"https://api.board.dylangiliberto.com/" + post['imageURL']}/>
                     : ""
                 }
                 </a>

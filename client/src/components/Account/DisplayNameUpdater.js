@@ -15,7 +15,7 @@ export default function DisplayNameUpdater({ sessionData, setSessionData, setDat
                                 SID: sessionData?.token,
                                 newName: newDisplayName,
                                 newHexCode: newHexCode};
-                const url = "http://dylangiliberto.com:3001/updateDisplayName";
+                const url = "https://api.board.dylangiliberto.com/updateDisplayName";
                 response = await fetch(url, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},

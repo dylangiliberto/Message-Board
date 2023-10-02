@@ -1,42 +1,40 @@
-const https = require("https");
-const fs = request("fs");
-
+const httpsModule = require("https");
+const httpModule = require('http');
+const fs = require('fs');
 const express = require("express");
+
+const app = express();
+
 const cors = require('cors');
-var mysql = require('mysql');
+//var mysql = require('mysql');
 
 const db = require('./database');
 const sessions = require('./sessions');
 
-const PORT = process.env.PORT || 3001;
-
-const app = express();
 const bcrypt = require('bcrypt');
 
 const multer = require('multer');
 const upload = multer({ dest: 'images/' });
 const uploadPfp = multer({ dest: 'pfp/' });
-const fs = require('fs');
+const PORT = process.env.PORT || 3001;
+
+httpsModule.createServer(app).listen(4000,()=>{
+  console.log("HTTPS NodeJS Server listening on port 4000. Thanks. See you.")
+});
+
+httpModule.createServer(app).listen(PORT, () => {
+  console.log(`HTTP  NodeJS Server listening on port ${PORT}`);
+});
 
 let con = db.getConnection();
 
-https.createServer(app).listen(4000, () => {
-  console.log("HTTPS NodeJS Server running on port 4000. Thanks. See you.")
-});
-
 app.use(cors());
 app.use(express.json());
-//app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 
-app.use("/", (req, res) => {
-  res.send("What are you doing here?");
+app.get('/', (req,res)=>{
+  res.send("Hello from express server.")
 })
-
-app.use("/api", (req, res) => {
-    res.send({
-      token: "Hello from my server hehe"
-    });
-});
 
 app.get("/status", async (req, res) => {
   let version = await db.getVersion(con);
@@ -512,8 +510,4 @@ app.use("/updatePfp", uploadPfp.single('image'), async (req, res) => {
   else {
     console.log("No file to upload!");
   }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
 });

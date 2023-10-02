@@ -76,7 +76,7 @@ export default function Home({ sessionData }) {
 
   useEffect(() => {
     if(!threads){
-      fetch("http://dylangiliberto.com:3001/threads", {
+      fetch("https://api.board.dylangiliberto.com/threads", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

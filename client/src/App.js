@@ -34,7 +34,7 @@ function App() {
 
   useEffect(() => {
     async function f() {
-      let url = "http://dylangiliberto.com:3001/status";
+      let url = "https://api.board.dylangiliberto.com/status";
       let f = await fetch(url, {
         method: 'GET',
         headers: {

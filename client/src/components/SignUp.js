@@ -19,7 +19,7 @@ export default function SignUp({}) {
     const handleSubmit = async e => {
         e.preventDefault();
         if(username) {
-            let av = await fetch('http://dylangiliberto.com:3001/usernameAvaliable', {
+            let av = await fetch('https://api.board.dylangiliberto.com/usernameAvaliable', {
                 method: 'POST',
                 headers: {
                 'Content-Type': 'application/json'
@@ -39,7 +39,7 @@ export default function SignUp({}) {
                 if(!taken && email && password === confirm){
                     console.log("registering Account");
                     let accountInfo = {username: username, password: password, email: email};
-                    let res = await fetch('http://dylangiliberto.com:3001/register', {
+                    let res = await fetch('https://api.board.dylangiliberto.com/register', {
                         method: 'POST',
                         headers: {
                         'Content-Type': 'application/json'
