@@ -19,7 +19,7 @@ export default function Thread({ sessionData }) {
 
     useEffect(() => {
       async function f() {
-        let cUrl = "http://dylangiliberto.com:3001/comments";
+        let cUrl = "https://api.board.dylangiliberto.com/comments";
         let f = await fetch(cUrl, {
           method: 'POST',
           headers: {

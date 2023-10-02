@@ -13,7 +13,7 @@ export default function Account({ sessionData, setSessionData }) {
     let [pfpError, setPfpError] = useState(false);
 
     useEffect(() => {
-        const url = "http://dylangiliberto.com:3001/user";
+        const url = "https://api.board.dylangiliberto.com/user";
         let sendData = {username: sessionData?.user?.username,
             SID: sessionData?.token};
 
@@ -45,7 +45,7 @@ export default function Account({ sessionData, setSessionData }) {
             setPfpError(false);
             try {
                 const formData = new FormData();
-                const url = "http://dylangiliberto.com:3001/updatePfp";
+                const url = "https://api.board.dylangiliberto.com/updatePfp";
                 formData.append('username', sessionData?.user?.username);
                 formData.append('SID', sessionData?.token);
                 formData.append('image', pfp);
@@ -71,7 +71,7 @@ export default function Account({ sessionData, setSessionData }) {
 
     const updateBio = async e => {
         e.preventDefault();
-        const url = "http://dylangiliberto.com:3001/updateBio";
+        const url = "https://api.board.dylangiliberto.com/updateBio";
         let sendData = {username: sessionData?.user?.username,
                         SID: sessionData?.token,
                         bio: bio};
@@ -99,11 +99,11 @@ export default function Account({ sessionData, setSessionData }) {
     if(data){
         let dateCreated = new Date(data.date_created|| "");
         let dateLogged = new Date(data.date_last_logged_in|| "");
-        if(dateCreated != "") {
+        if(dateCreated !== "") {
             dateCreated.setHours(dateCreated.getHours() - 10);
             dateCreated = months[dateCreated.getMonth()] + " " + dateCreated.getDate() + ", " + dateCreated.getFullYear();
         }
-        if(dateLogged != "") {
+        if(dateLogged !== "") {
             //dateLogged.setHours(dateLogged.getHours() - 10);
             dateLogged = months[dateLogged.getMonth()] + " " + dateLogged.getDate() + ", " + dateLogged.getFullYear() + " at "
                 + (dateLogged.getHours() > 12 ? dateLogged.getHours() - 12 : dateLogged.getHours()) + ":" + dateLogged.getMinutes() 
@@ -144,7 +144,7 @@ export default function Account({ sessionData, setSessionData }) {
                                         <td>
                                             {
                                                 data?.imageURL && data?.imageURL !== "" ? 
-                                                <img className="pfp" src={"http://dylangiliberto.com:3001/" + data?.imageURL} /> : 
+                                                <img className="pfp" src={"https://api.board.dylangiliberto.com/" + data?.imageURL} /> : 
                                                 <img className="pfp" src="../pfp_default.png" />
                                             }
                                         </td>

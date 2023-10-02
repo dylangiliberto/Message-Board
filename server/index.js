@@ -1,31 +1,35 @@
+const httpModule = require('http');
+const fs = require('fs');
 const express = require("express");
+
+const app = express();
+
 const cors = require('cors');
-var mysql = require('mysql');
+//var mysql = require('mysql');
 
 const db = require('./database');
 const sessions = require('./sessions');
 
-const PORT = process.env.PORT || 3001;
-
-const app = express();
 const bcrypt = require('bcrypt');
 
 const multer = require('multer');
 const upload = multer({ dest: 'images/' });
 const uploadPfp = multer({ dest: 'pfp/' });
-const fs = require('fs');
+const PORT = process.env.PORT || 3001;
+
+httpModule.createServer(app).listen(PORT, () => {
+  console.log(`HTTP  NodeJS Server listening on port ${PORT}`);
+});
 
 let con = db.getConnection();
 
 app.use(cors());
 app.use(express.json());
-//app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 
-app.use("/api", (req, res) => {
-    res.send({
-      token: "Hello from my server hehe"
-    });
-});
+app.get('/', (req,res)=>{
+  res.send("Hello from express server.")
+})
 
 app.get("/status", async (req, res) => {
   let version = await db.getVersion(con);
@@ -501,8 +505,4 @@ app.use("/updatePfp", uploadPfp.single('image'), async (req, res) => {
   else {
     console.log("No file to upload!");
   }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
 });

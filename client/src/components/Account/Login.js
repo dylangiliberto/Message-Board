@@ -7,7 +7,7 @@ import {
 } from "react-router-dom";
 
 async function loginUser(credentials, setUser) {
-  let token = fetch('http://dylangiliberto.com:3001/login', {
+  let token = fetch('https://api.board.dylangiliberto.com/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

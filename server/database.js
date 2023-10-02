@@ -11,7 +11,7 @@ function getConnection(){
     });
     con.connect(function(err) {
         if (err) throw (err);
-        console.log("Connected!");
+        console.log("Successfully Connected to Database!");
     });
     return con;
 }

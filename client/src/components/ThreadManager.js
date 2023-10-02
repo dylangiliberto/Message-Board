@@ -24,7 +24,7 @@ export default function ThreadManager({ threadData, sessionData={sessionData}, s
     const updateThread = async e => {
         e.preventDefault();
         console.log("Updating Thread");
-        let url = "http://dylangiliberto.com:3001/updateThread";
+        let url = "https://api.board.dylangiliberto.com/updateThread";
         let c = await fetch(url, {
             method: 'POST',
             headers: {

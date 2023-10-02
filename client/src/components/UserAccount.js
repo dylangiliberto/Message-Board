@@ -12,7 +12,7 @@ export default function UserAccount() {
     let { username } = useParams();
 
     useEffect(() => {
-        const url = "http://dylangiliberto.com:3001/userPublic";
+        const url = "https://api.board.dylangiliberto.com/userPublic";
         let sendData = {username: username};
 
         const fetchData = async () => {
@@ -50,7 +50,7 @@ export default function UserAccount() {
         }
         let pfp = (
             data?.imageURL && data?.imageURL !== "" ? 
-            <img className="pfpBig" src={"http://dylangiliberto.com:3001/" + data?.imageURL} /> : 
+            <img className="pfpBig" src={"https://api.board.dylangiliberto.com/" + data?.imageURL} /> : 
             <img className="pfpBig" src="../pfp_default.png" />
         );
         return (
