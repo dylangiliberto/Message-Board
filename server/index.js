@@ -198,14 +198,12 @@ app.use("/login", async (req, res) => {
       
       let pass = req.body.password;
       hash = hash.replace(/^\$2y(.+)$/i, '$2a$1');
-      //console.log("Comapring: " + req.body.password + " with " + hash);
       bcrypt.compare(pass, hash, function(err, v) {
         console.log("Verified: " + v);
         let verified = v || false;
         if(verified) {
           console.log("User " + req.body.username + " Logged in!");
-          //console.log(user);
-          console.log("Session ID: " + token);
+          //console.log("Session ID: " + token);
           sessions.registerSID(con, token, req.body.username);
           db.loggedIn(con, req.body.username);
           res.send({
