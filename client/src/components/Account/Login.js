@@ -16,7 +16,8 @@ async function loginUser(credentials, setUser) {
   }).then(response => {
     if(response.ok)
       return response.json();
-    return "Failed";
+    console.log(response.statusText);
+    return response.statusText;
   });
   return token;
 }
@@ -25,6 +26,7 @@ export default function Login({ sessionData, setSessionData }) {
   const [username, setUserName] = useState();
   const [password, setPassword] = useState();
   let [success, setSuccess] = useState(true);
+  let [errorMessage, setErrorMessage] = useState();
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -33,7 +35,7 @@ export default function Login({ sessionData, setSessionData }) {
       username,
       password
     }, setSessionData);
-    if(res.token){
+    if(res?.token){
       console.log("User: " +  JSON.stringify(res));
       console.log("Token: " + res.token);
       console.log("Success: " + success);
@@ -42,10 +44,11 @@ export default function Login({ sessionData, setSessionData }) {
     else {
       setPassword("");
       setSuccess(false);
+      setErrorMessage(res);
     }
   }
   if(!sessionData?.token){
-    let err = <h3 style={{color: 'red'}}>Please verify username and password</h3>;
+    let err = <h3 style={{color: 'red'}}>{errorMessage}</h3>;
     return(
       <div className="login-wrapper Page">
         <h1>Please Log In</h1>

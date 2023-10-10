@@ -187,9 +187,6 @@ app.use("/deleteCommentPerm", async (req, res) => {
 app.use("/login", async (req, res) => {
   if(req.body.username && req.body.password){
     console.log("User " + req.body.username + " attempting log in...");
-    let hash = await db.getHashword(con, req.body.username).then(function(rows) {
-      return rows;
-    });
     let user = await db.getUserData(con, req.body.username).then(function(rows) {
       return rows;
     });
@@ -197,7 +194,9 @@ app.use("/login", async (req, res) => {
       let token = await sessions.generateSID(con);
       
       let pass = req.body.password;
+      let hash = user.password;
       hash = hash.replace(/^\$2y(.+)$/i, '$2a$1');
+
       bcrypt.compare(pass, hash, function(err, v) {
         console.log("Verified: " + v);
         let verified = v || false;
@@ -212,18 +211,19 @@ app.use("/login", async (req, res) => {
           });
         }
         else {
+          res.statusMessage = 'Incorrect Password';
           res.sendStatus(403);
         }
       });
     }
     else {
+      res.statusMessage = 'User Not Found';
       res.sendStatus(403);
     }
   }
   else {
-    res.send({
-      token: false
-    });
+    res.statusMessage = 'Missing Username or Password';
+    res.sendStatus(403);
   }
 });
 

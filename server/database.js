@@ -109,23 +109,6 @@ function destroySession(con, SID) {
     con.query(sql, [SID]);
 }
 
-function getHashword(con, username) {
-    let sql = "SELECT * FROM users WHERE username = \"" + username + "\";";
-
-    return new Promise(function(resolve, reject) {
-        con.query(sql, function (err, result) {
-            //console.log(result);
-            if (err) {
-                return reject(err);
-            }
-            if(result[0])
-                resolve(result[0].password);
-            else
-                resolve("No Such User");
-        });
-    });
-}
-
 function getUserData(con, username) {
     let sql = "SELECT * FROM users WHERE username = \"" + username + "\";";
 
