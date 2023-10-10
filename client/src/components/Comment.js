@@ -103,7 +103,7 @@ export default function Comment({ comment, sessionData, threadID, setComments })
     let img = (
         comment['imageURL'] && comment['imageURL'] !== "No Image" 
         ? 
-        <img className="image" src={"https://api.board.dylangiliberto.com/" + comment['imageURL']}/>
+        <img loading="lazy" className="image" src={"https://api.board.dylangiliberto.com/" + comment['imageURL']}/>
         : ""
     );
 

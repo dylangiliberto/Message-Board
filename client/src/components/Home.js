@@ -14,6 +14,47 @@ import {
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
+function getDummyThreads() {
+  let dummyThread = (
+    <div className="threadRowDiv lazyLoadingEffect">
+      <table className="threadRow"><tbody>
+        <tr className="threadRow">
+          <td className="threadCell threadPinCell"> &nbsp; <br/> &nbsp; </td>
+          <td className="threadCell threadTitleCell"><b> </b></td>
+          <td className="threadCell threadDescCell"> </td>
+          
+          <td className="threadCell threadUserCell"><span> </span></td>
+          <td className="threadCell threadActCell"> </td>
+          <td className="threadCell threadCreateCell"> </td>
+        </tr>
+      </tbody></table>
+    </div>
+  );
+
+  let table = (
+    <div>
+      <div>
+      <table className="threadTable">
+        <thead>
+          <tr>
+            <th className="threadCell threadPinCell"></th>
+            <th className="threadCell threadTitleCell">Thread Title</th>
+            <th className="threadCell threadDescCell">Thread Description</th>
+            <th className="threadCell threadUsereCell">Creator</th>
+            <th className="threadCell threadActCell">Last Activity</th>
+            <th className="threadCell threadCreateCell">Date Created</th>
+          </tr>
+        </thead>
+      </table>
+      </div>
+      {dummyThread}{dummyThread}{dummyThread}
+      {dummyThread}{dummyThread}{dummyThread}
+      {dummyThread}{dummyThread}{dummyThread}
+    </div>    
+  );
+  return table;
+}
+
 function getThreadTable(data, user) {
   let tbody = data.map(row => {
     let act = new Date(row['last_activity']);
@@ -108,7 +149,7 @@ export default function Home({ sessionData }) {
           </div>
         </td>
       </tr></tbody></table>
-      {!threads ? "" : getThreadTable(threads, sessionData?.user)} 
+      {!threads ? getDummyThreads() : getThreadTable(threads, sessionData?.user)} 
     </div>
   );
 }
