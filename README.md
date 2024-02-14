@@ -11,7 +11,7 @@ Passwords must be 8 characters long, and are encrypted when stored in the databa
 
 ### Display Names
 Display Names are like nicknames! If set, they get displayed in place of your username. Usernames cannot be changed, but display names can. Display Names can have special symbols, emojis, or characters that would not work in a username, since your username is used to log in. 
-Furthermore, diaplynames can be set to display in any color! Just take the 6-digit hex code for your favorite color and enter in the field under your account settings, and press update!
+Furthermore, display names can be set to display in any color! Just take the 6-digit hex code for your favorite color and enter in the field under your account settings, and press update!
 
 ![image](https://github.com/Dylang140/Message-Board/assets/98580719/95737f05-97be-48c8-a95c-f15c7eb0b260)
 
