@@ -19,6 +19,9 @@ Furthermore, display names can be set to display in any color! Just take the 6-d
 - Password recovery (using email)
 - "Lazy Loading" to speed up loading pages with many images
 - Complete redisign of front-end (It could use some work)
+- Complete user, role, and permissions systems to give more
+  control over what each user can do on the site
 - More admin features
 - Follow/friend users
+- Notifications!
 - Many bug fixes...
