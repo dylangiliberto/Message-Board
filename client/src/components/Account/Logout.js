@@ -8,7 +8,7 @@ import {
 
 export default function Logout({sessionData, setSessionData, forbidden}) {
     if(sessionData.token) {
-        fetch("https://api.board.dylangiliberto.com/logout", {
+        fetch("https://api.board.dylang140.com/logout", {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'

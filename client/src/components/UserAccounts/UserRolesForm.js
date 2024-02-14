@@ -1,15 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import '../../App.css';
 
-export default function DisplayNameUpdater({ sessionData, setSessionData, setData }) {
-    let [newDisplayName, setNewDisplayName] = useState();
-    let [newHexCode, setNewHexCode] = useState();
-    let [success, setSuccess] = useState();
+export default function UserRolesForm({ sessionData, setSessionData, username }) {
+    const [roles, setRoles] = useState();
 
-    const updateDisplayName = async e => {
+    useEffect(() => {
+        const url = "https://api.board.dylang140.com/getUserRoles";
+        let sendData = {username: sessionData?.user?.username,
+            SID: sessionData?.token, targetUsername: username};
+
+        const fetchData = async () => {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(sendData)
+                    })
+                const json = await response.json();
+                //console.log(json.user);
+                console.log(json.roles[0].roleDisplayName);
+                setRoles(json.roles);
+            } catch (error) {
+                console.log("error", error);
+            }
+        };
+
+        fetchData();
+    }, [sessionData, username]);
+
+    /*
+    const updateRoles = async e => {
         e.preventDefault();
         let response;
-        if(newDisplayName) {
+        if(roles) {
             try {
                 let sendData = {username: sessionData?.user?.username,
                                 SID: sessionData?.token,
@@ -40,25 +65,12 @@ export default function DisplayNameUpdater({ sessionData, setSessionData, setDat
             setSuccess(false);
         }
     };
-    let successMsg;
-    if(success === true) {
-        successMsg = <label style={{"color": "green"}}>Updated!</label>;
-    }
-    else if(success === false) {
-        successMsg = <label style={{"color": "red"}}>Could not update name!</label>;
-    }
-    else {
-        successMsg = "";
-    }
+    */
 
     return (
         <div>
-            <form onSubmit={updateDisplayName}>
-                <input type="text" className="TextField" value={newDisplayName} onChange={e => setNewDisplayName(e.target.value)} placeholder="Enter a new Display Name" />
-                <span> </span>
-                <input type="text" className="TextField" maxLength="6" value={newHexCode} onChange={e => setNewHexCode(e.target.value)} placeholder="Hex Code (6 Digit, no #)" />
-                <span> </span><input type="submit" className="Button" value="Update"/> {successMsg}
-            </form>
+            <h3>Users Roles</h3>
+            {roles ? roles[0].roleDisplayName : ""}
         </div>
     );
 

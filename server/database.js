@@ -109,34 +109,19 @@ function destroySession(con, SID) {
     con.query(sql, [SID]);
 }
 
-function getHashword(con, username) {
-    let sql = "SELECT * FROM users WHERE username = \"" + username + "\";";
-
-    return new Promise(function(resolve, reject) {
-        con.query(sql, function (err, result) {
-            //console.log(result);
-            if (err) {
-                return reject(err);
-            }
-            if(result[0])
-                resolve(result[0].password);
-            else
-                resolve("No Such User");
-        });
-    });
-}
-
 function getUserData(con, username) {
-    let sql = "SELECT * FROM users WHERE username = \"" + username + "\";";
+    let sql = "SELECT * FROM users WHERE username = ?;";
 
     return new Promise(function(resolve, reject) {
-        con.query(sql, function (err, result) {
+        con.query(sql, [username], function (err, result) {
             //console.log(result);
             if (err) {
                 return reject(err);
             }
-            if(result[0])
+            if(result[0]){
                 resolve(result[0]);
+            }
+                
             else
                 resolve("No Such User");
         });
@@ -394,7 +379,156 @@ function isAdministrator(con, username) {
     }
 }
 
-module.exports = { getConnection, getVersion, getHashword, getUserData, createUser, doesSIDExist, doesUserExist, getSession, getUserSessions, 
+function getRolesList(con) {
+    let sql = "SELECT * FROM `roles`";
+    console.log('Getting Roles List');
+    return new Promise(function(resolve, reject) {
+        con.query(sql, function (err, result) {
+            if(err)
+                return reject(err);
+            resolve(result);
+        }
+    )});
+}
+
+function getPermissionsList(con) {
+    let sql = "SELECT * FROM `permissions`";
+    console.log('Getting Permissions List');
+    return new Promise(function(resolve, reject) {
+        con.query(sql, function (err, result) {
+            if(err)
+                return reject(err);
+            resolve(result);
+        }
+    )});
+}
+
+function getRolesPermissionsList(con) {
+    let sql = "SELECT * FROM `role_permissions`";
+    console.log('Getting Role Permissions List');
+    return new Promise(function(resolve, reject) {
+        con.query(sql, function (err, result) {
+            if(err)
+                return reject(err);
+            resolve(result);
+        }
+    )});
+}
+
+function setPermission(con, role, permission, val) {
+    let sql = "SELECT `role_permissionID` FROM `role_permissions` WHERE `roleID` = ? AND `permissionID` = ?";
+    
+    con.query(sql, [role, permission], function (err, result) {
+        let exists = result[0] ? true : false;
+        if(err)
+            return reject(err);
+        else if(exists && val === 0) {
+            console.log("Removing: " + role + " " + permission);
+            let sql = "DELETE FROM `role_permissions` WHERE `roleID` = ? AND `permissionID` = ? LIMIT 1";
+            con.query(sql, [role, permission]);
+        }
+        else if(!exists && val > 0) {
+            console.log("Adding: " + role + " " + permission);
+            let sql = "INSERT  INTO `role_permissions` (`roleID`, `permissionID`) VALUES (?, ?);";
+            con.query(sql, [role, permission]);
+        }
+    });
+}
+
+function addRole(con, roleName, roleDisplayName, rolePriority, roleAbreviation) {
+    let sql = "INSERT INTO `roles` (`roleName`, `roleDisplayName`, `rolePriority`, `roleAbreviation`) VALUES (?,?,?,?)";
+    con.query(sql, [roleName, roleDisplayName, rolePriority, roleAbreviation]);
+}
+
+function assignRole(con, username, roleID) {
+    let sql = "INSERT INTO `user_roles` (`username`, `roleID`) VALUES (?, ?);"
+    con.query(sql, [username, roleID]);
+}
+
+async function assignRoles(con, username, roles) { //Given an array of [int roleID, bool assigned], assigns users roles
+    let sql;
+    let exists;
+    for(let i = 0; i < roles.length; i++) {
+        sql = "SELECT `user_roleID` FROM `user_roles` WHERE `username` = ? AND `roleID` = ?;";
+        exists = await con.query(sql, [username, roles[i][0]]); //roles should be 2d array, [[roleID, val],[roleID, val]]
+        if(exists){
+            exists = exists[0]?.user_roleID > 0;
+            if(exists && roles[i][1] === 0){ //Delete if entry exists and shoud not
+                sql = "DELETE FROM `user_roles` WHERE `username` = ? AND `roleID` = ? LIMIT 1;";
+                con.query(sql, [username, role[i]]);
+            }
+            else if(!exists && roles[i][1] === 1) { //Insert if entry does not exist but should
+                sql = "INSERT INTO `user_roles` (`username`, `roleID`) VALUES (?, ?);";
+                con.query(sql, [username, role[i]]);
+            }//Otherwise do nothing (doesnt and shouldnt exist, or does and should exist)
+        }
+    }
+    con.query(sql, [username, roleID]);
+}
+
+function getUserRoles(con, username) {
+    let sql = "SELECT `roles`.`roleID`, `roles`.`roleDisplayName` FROM MessageBoard.user_roles LEFT JOIN `roles` ON `user_roles`.`roleID` = `roles`.`roleID` WHERE `username` = ?;";
+    return new Promise(function(resolve, reject) {
+        con.query(sql, [username], function(error, result) {
+            if(error) {
+                reject();
+            }
+            resolve(result);
+        });
+    });
+}
+
+function getUserPermissions(con, username) {
+    let sql = "SELECT `permissionID` FROM `role_permissions` WHERE `roleID` = (" +
+    "SELECT `user_roles`.`roleID` FROM MessageBoard.user_roles LEFT JOIN `roles` ON " + 
+    "`roles`.`roleID` = `user_roles`.`roleID` WHERE `username` = ? ORDER BY `roles`.`rolePriority` DESC LIMIT 1);";
+    console.log("getting user perms for " + username);
+    return new Promise(function(resolve, reject) {
+        con.query(sql, [username], function(error, result) {
+            if(error) {
+                console.log(error);
+                reject();
+            }
+            resolve(result);
+        });
+    });
+}
+
+function getUsersHighestRole(con, username) {
+    let sql = "SELECT `user_roles`.`roleID` FROM MessageBoard.user_roles LEFT JOIN `roles` ON `roles`.`roleID` = `user_roles`.`roleID` WHERE `username` = ? ORDER BY `roles`.`rolePriority` DESC LIMIT 1;";
+    return new Promise(function(resolve, reject) {
+        con.query(sql, [username], function(error, result) {
+            if(error) {
+                reject();
+            }
+            resolve(result);
+        });
+    });
+}
+
+async function userHasPermission(con, username, permissionID) {
+    let roleID = await getUsersHighestRole(con, username);
+    if(roleID[0]?.roleID) {
+        let sql = "SELECT `role_permissionID` FROM `role_permissions` WHERE `roleID` = ? AND `permissionID` = ?";
+        let res = await new Promise(function(resolve, reject) {
+            con.query(sql, [roleID[0].roleID, permissionID], function(error, result) {
+                if(error) {
+                    console.log(error);
+                    resolve(false);
+                }
+                resolve(result);
+            });
+        });
+        return res[0]?.role_permissionID > 0;
+    }
+    else {
+        console.log("No roleID");
+        return false;
+    }
+}
+
+module.exports = { getConnection, getVersion, getUserData, createUser, doesSIDExist, doesUserExist, getSession, getUserSessions, 
     createSession, destroySession, postComment, getComments, isCommentLiked, likeComment, unlikeComment, getThreadData, deleteComment, deleteCommentPerm,
     loggedIn, createThread, lockThread, deleteThread, archiveThread, updateBio, updatePfp, updateUsername, updateDisplayName, isAdministrator,
-    getTopTwoReplies, isCommentAuthor };
+    getTopTwoReplies, isCommentAuthor, getRolesList, getPermissionsList, getRolesPermissionsList, setPermission, addRole, assignRole, assignRoles, getUserRoles,
+    getUserPermissions, getUsersHighestRole, userHasPermission };

@@ -85,6 +85,7 @@ app.use("/register", async (req, res) => {
     bcrypt.hash(password, 10, function(err, hash) {
       if(!err) {
         db.createUser(con, username, hash, email);
+        db.assignRole(con, username, 1); //Assign default 'User' role to new users
         console.log("Registered User " + username);
         res.sendStatus(200);
       }
@@ -187,45 +188,45 @@ app.use("/deleteCommentPerm", async (req, res) => {
 app.use("/login", async (req, res) => {
   if(req.body.username && req.body.password){
     console.log("User " + req.body.username + " attempting log in...");
-    let hash = await db.getHashword(con, req.body.username).then(function(rows) {
-      return rows;
-    });
     let user = await db.getUserData(con, req.body.username).then(function(rows) {
       return rows;
     });
     if(user.username === req.body.username) {
       let token = await sessions.generateSID(con);
-      
+      let perms = await db.getUserPermissions(con, req.body.username);
       let pass = req.body.password;
+      let hash = user.password;
       hash = hash.replace(/^\$2y(.+)$/i, '$2a$1');
-      //console.log("Comapring: " + req.body.password + " with " + hash);
+
       bcrypt.compare(pass, hash, function(err, v) {
         console.log("Verified: " + v);
         let verified = v || false;
         if(verified) {
           console.log("User " + req.body.username + " Logged in!");
-          //console.log(user);
-          console.log("Session ID: " + token);
+          //console.log("Session ID: " + token);
           sessions.registerSID(con, token, req.body.username);
+          console.log(perms);
           db.loggedIn(con, req.body.username);
           res.send({
             user: user,
+            permissions: perms,
             token: token
           });
         }
         else {
+          res.statusMessage = 'Incorrect Password';
           res.sendStatus(403);
         }
       });
     }
     else {
+      res.statusMessage = 'User Not Found';
       res.sendStatus(403);
     }
   }
   else {
-    res.send({
-      token: false
-    });
+    res.statusMessage = 'Missing Username or Password';
+    res.sendStatus(403);
   }
 });
 
@@ -505,4 +506,120 @@ app.use("/updatePfp", uploadPfp.single('image'), async (req, res) => {
   else {
     console.log("No file to upload!");
   }
+});
+
+app.use("/getRolePermissionTable", async (req, res) => {
+  const id = req.query.id;
+  let perms = await db.getPermissionsList(con, id);
+  let roles = await db.getRolesList(con, id);
+  let rolePerms = await db.getRolesPermissionsList(con, id);
+  res.send({roles: roles, perms: perms, rolePerms, rolePerms});
+});
+
+app.use("/updatePermTable", async (req, res) => {
+  let perms = await db.getPermissionsList(con);
+  let roles = await db.getRolesList(con);
+ 
+  let table = req.body;
+  try {
+    for(let i = 0; i < table.length; i++) {
+      for(let j = 0; j < table[0].length; j++) {
+        db.setPermission(con, roles[j].roleID, perms[i].permissionID, table[i][j]);
+      }
+    }
+    res.sendStatus(200)
+  }
+  catch(err) {
+    console.log(err);
+    res.sendStatus(500);
+  }
+});
+
+app.use("/addRole", async (req, res) => {
+  const SID = req.body.SID;
+  const user = req.body.username;
+  const roleN = req.body.roleName;
+  const roleD = req.body.roleDisplayName;
+  const roleP = req.body.rolePriority;
+  const roleA = req.body.roleAbreviation;
+
+  if(SID && user && roleN && roleD && roleP && roleA) {
+    let verified = await sessions.verify(con, SID, user);
+    let admin = await db.isAdministrator(con, user);
+    if(verified && admin) {
+      try {
+        db.addRole(con, roleN, roleD, roleP, roleA);
+        res.sendStatus(200);
+      }
+      catch(err) {
+        console.log(err);
+        res.sendStatus(500);
+      }
+    }
+    else {
+      res.sendStatus(403);
+    }
+  }
+  else {
+    res.sendStatus(500);
+  }
+});
+
+app.use("/setUserRoles", async (req, res) => {
+  const SID = req.body.SID;
+  const user = req.body.username;
+
+  const target = req.body.targetUsername;
+  const roles = req.body.roles;
+ 
+  console.log(user + " " + SID + " " + target + " " + roles);
+
+  if(SID && user && target && roles) {
+    let verified = await sessions.verify(con, SID, user);
+    let admin = await db.isAdministrator(con, user);
+    if(verified && admin) {
+      try {
+        db.assignRoles(con, target, roles);
+        res.sendStatus(200);
+      }
+      catch(err) {
+        console.log(err);
+        res.sendStatus(500);
+      }
+    }
+    else {
+      res.sendStatus(403);
+    }
+  }
+  else {
+    res.sendStatus(500);
+  }
+});
+
+app.use("/getUserRoles", async (req, res) => {
+  const SID = req.body.SID;
+  const user = req.body.username;
+
+  const target = req.body.targetUsername;
+
+  let roles = await db.getUserRoles(con, target);
+
+  res.send({roles: roles});
+});
+
+app.use("/getUserPermissions", async (req, res) => {
+  const SID = req.body.SID;
+  const user = req.body.username;
+
+  const target = req.body.targetUsername;
+
+  let perms = await db.getUserPermissions(con, target);
+
+  res.send({permissions: perms});
+});
+
+app.use("/test", async (req, res) => {
+  let perms = await db.userHasPermission(con, 'Dylang140', 7);
+
+  res.send(perms);
 });

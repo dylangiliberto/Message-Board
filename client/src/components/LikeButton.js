@@ -15,7 +15,7 @@ export default function LikeButton({ initial, initCount, comment, threadID, sess
         if(sessionData?.token) {
             console.log("Liking Comment");
             //console.log("Comment: " + comment + " Thread: " + threadID + " User: " + username + " Token: " + token);
-            let url = "https://api.board.dylangiliberto.com/likeComment";
+            let url = "https://api.board.dylang140.com/likeComment";
             let c = await fetch(url, {
                 method: 'POST',
                 headers: {

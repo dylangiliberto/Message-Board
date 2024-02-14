@@ -4,6 +4,7 @@ import '../../App.css';
 import { NavLink } from "react-router-dom";
 import AccountCorner from './AccountCorner';
 import LogCorner from './LogCorner';
+import AdminCorner from './AdminCorner';
 
 export default function NavBarMain({ sessionData, activeTab }) {
   let className = "NavLink";
@@ -28,6 +29,7 @@ export default function NavBarMain({ sessionData, activeTab }) {
           </NavLink>
           <AccountCorner sessionData={sessionData} />  
           <LogCorner sessionData={sessionData} />
+          <AdminCorner sessionData={sessionData} />
       </ul>
     </div>
   );

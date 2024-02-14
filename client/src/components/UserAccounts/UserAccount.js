@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import {
     useParams,
   } from "react-router-dom";
-import '../App.css';
+import '../../App.css';
+import UserRolesForm from './UserRolesForm';
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 
-export default function UserAccount() {
+export default function UserAccount({ sessionData, setSessionData }) {
     let [data, setData] = useState();
     let { username } = useParams();
 
     useEffect(() => {
-        const url = "https://api.board.dylangiliberto.com/userPublic";
+        const url = "https://api.board.dylang140.com/userPublic";
         let sendData = {username: username};
 
         const fetchData = async () => {
@@ -50,7 +51,7 @@ export default function UserAccount() {
         }
         let pfp = (
             data?.imageURL && data?.imageURL !== "" ? 
-            <img className="pfpBig" src={"https://api.board.dylangiliberto.com/" + data?.imageURL} /> : 
+            <img className="pfpBig" src={"https://api.board.dylang140.com/" + data?.imageURL} /> : 
             <img className="pfpBig" src="../pfp_default.png" />
         );
         return (
@@ -81,6 +82,8 @@ export default function UserAccount() {
                 {dateLogged}
                 <h2>Administrator</h2>
                 {data.administrator ? "Yes" : "No"}
+                <br/>
+                <UserRolesForm sessionData={sessionData} setSessionData={setSessionData} username={data.username}/>
 
             </div>
         )

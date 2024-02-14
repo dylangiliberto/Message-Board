@@ -1,5 +1,6 @@
 const db = require('./database');
 var crypto = require('crypto');
+const bcrypt = require('bcrypt');
 
 async function generateSID(con){
     let SID = crypto.randomBytes(16).toString('base64');
