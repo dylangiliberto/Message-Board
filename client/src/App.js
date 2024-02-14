@@ -11,11 +11,12 @@ import ErrorPage from './components/ErrorPage';
 import Root from './components/root';
 import Logout from './components/Account/Logout';
 import SignUp from './components/SignUp';
-import UserAccount from './components/UserAccount';
+import UserAccount from './components/UserAccounts/UserAccount';
 import Footer from './components/Footer';
 import NewThread from './components/NewThread';
 import ArchivedThreads from './components/ArchivedThreads';
 import Post from './components/Post';
+import Admin from './components/Account/Admin';
 import {
   BrowserRouter as Router,
   Route,
@@ -34,7 +35,7 @@ function App() {
 
   useEffect(() => {
     async function f() {
-      let url = "https://api.board.dylangiliberto.com/status";
+      let url = "https://api.board.dylang140.com/status";
       let f = await fetch(url, {
         method: 'GET',
         headers: {
@@ -65,9 +66,10 @@ function App() {
           <Route path={"/about"} element={<About sessionData={sessionData} />} />
           <Route path={"/login"} element={<Login sessionData={sessionData} setSessionData={setSessionData} />} />
           <Route path={"/Account"} element={<Account sessionData={sessionData} setSessionData={setSessionData} />} />
+          <Route path={"/admin"} element={<Admin sessionData={sessionData} setSessionData={setSessionData} />} />
           <Route path={"/logout"} element={<Logout sessionData={sessionData} setSessionData={setSessionData}/>} />
           <Route path={"/forbidden"} element={<Logout sessionData={sessionData} setSessionData={setSessionData} forbidden={true}/>} />
-          <Route path={"/user/:username"} element={<UserAccount />} />
+          <Route path={"/user/:username"} element={<UserAccount sessionData={sessionData} setSessionData={setSessionData}/>} />
           <Route path={"/newthread"} element={<NewThread sessionData={sessionData} setSessionData={setSessionData} />} />
           <Route path={"/archived"} element={<ArchivedThreads sessionData={sessionData} />} />
           <Route path="/space">

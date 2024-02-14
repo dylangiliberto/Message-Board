@@ -19,7 +19,7 @@ export default function NewThread({ sessionData, setSessionData }) {
         e.preventDefault();
         if(title && desc) {
             console.log("Creating Thread" + title + desc);
-            let url = "https://api.board.dylangiliberto.com/newThread";
+            let url = "https://api.board.dylang140.com/newThread";
             let c = await fetch(url, {
                 method: 'POST',
                 headers: {

@@ -37,7 +37,7 @@ export default function ThreadHeader({ sessionData, threadData, setComments, set
             formData.append('thread', threadData.ID);
             formData.append('SID', sessionData.token);
             formData.append('requestDeleted', sessionData?.user?.administrator);
-            let url = "https://api.board.dylangiliberto.com/postComment";
+            let url = "https://api.board.dylang140.com/postComment";
             let c = await fetch(url, {
               method: 'POST',
               body: formData

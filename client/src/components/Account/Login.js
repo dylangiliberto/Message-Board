@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import useSession from './useSession';
 import '../../App.css';
 import {
   Navigate,
 } from "react-router-dom";
 
 async function loginUser(credentials, setUser) {
-  let token = fetch('https://api.board.dylangiliberto.com/login', {
+  let token = fetch('https://api.board.dylang140.com/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -16,7 +15,6 @@ async function loginUser(credentials, setUser) {
   }).then(response => {
     if(response.ok)
       return response.json();
-    console.log(response.statusText);
     return response.statusText;
   });
   return token;
@@ -30,15 +28,11 @@ export default function Login({ sessionData, setSessionData }) {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    console.log("Sending " + username + " " + password);
     const res = await loginUser({
       username,
       password
     }, setSessionData);
     if(res?.token){
-      console.log("User: " +  JSON.stringify(res));
-      console.log("Token: " + res.token);
-      console.log("Success: " + success);
       setSessionData(res);
     }
     else {

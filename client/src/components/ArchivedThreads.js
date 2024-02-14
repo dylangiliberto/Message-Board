@@ -65,7 +65,7 @@ export default function ArchivedThreads({ sessionData }) {
 
   useEffect(() => {
     if(!threads){
-      fetch("https://api.board.dylangiliberto.com/archivedThreads", {
+      fetch("https://api.board.dylang140.com/archivedThreads", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

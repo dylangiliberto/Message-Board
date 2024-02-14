@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import '../../App.css';
 import DisplayNameUpdater from './DisplayNameUpdater';
+import perms from '../../utilities/perms';
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
 
 export default function Account({ sessionData, setSessionData }) {
     let [data, setData] = useState();
@@ -11,9 +13,10 @@ export default function Account({ sessionData, setSessionData }) {
     let [pfp, setPfp] = useState();
     let [pfpSizeError, setPfpSizeError] = useState(false);
     let [pfpError, setPfpError] = useState(false);
+    let [adminPref, setAdminPref] = useState(sessionData?.user?.viewDeletedComments);
 
     useEffect(() => {
-        const url = "https://api.board.dylangiliberto.com/user";
+        const url = "https://api.board.dylang140.com/user";
         let sendData = {username: sessionData?.user?.username,
             SID: sessionData?.token};
 
@@ -35,7 +38,7 @@ export default function Account({ sessionData, setSessionData }) {
         };
 
         fetchData();
-    }, []);
+    }, [sessionData]);
 
     const updatePfp = async e => {
         e.preventDefault();
@@ -45,7 +48,7 @@ export default function Account({ sessionData, setSessionData }) {
             setPfpError(false);
             try {
                 const formData = new FormData();
-                const url = "https://api.board.dylangiliberto.com/updatePfp";
+                const url = "https://api.board.dylang140.com/updatePfp";
                 formData.append('username', sessionData?.user?.username);
                 formData.append('SID', sessionData?.token);
                 formData.append('image', pfp);
@@ -71,7 +74,7 @@ export default function Account({ sessionData, setSessionData }) {
 
     const updateBio = async e => {
         e.preventDefault();
-        const url = "https://api.board.dylangiliberto.com/updateBio";
+        const url = "https://api.board.dylang140.com/updateBio";
         let sendData = {username: sessionData?.user?.username,
                         SID: sessionData?.token,
                         bio: bio};
@@ -96,6 +99,13 @@ export default function Account({ sessionData, setSessionData }) {
         }
     };
 
+    const updateAdminPref = async e => {
+        setAdminPref(!adminPref)
+        if(sessionData?.user){
+            sessionData.user.viewDeletedComments = (adminPref ? true : false);
+        }
+    };
+
     if(data){
         let dateCreated = new Date(data.date_created|| "");
         let dateLogged = new Date(data.date_last_logged_in|| "");
@@ -112,12 +122,32 @@ export default function Account({ sessionData, setSessionData }) {
         let bioForm = (
             <form onSubmit={updateBio}>
                 <textarea className="textArea bioForm" onChange={e => setBio(e.target.value)} value={data.user_bio ? data.user_bio : ""}/>
-                <br/>
-                <input type="submit" value="Update" className="Button" />
-                {bioError === true ? <label style={{color: "red"}}> Could not update bio!</label> : ""}
-                {bioError === false ? <label style={{color: "green"}}> Saved!</label> : ""}
+                    <br/>
+                    <input type="submit" value="Update" className="Button" />
+                    {bioError === true ? <label style={{color: "red"}}> Could not update bio!</label> : ""}
+                    {bioError === false ? <label style={{color: "green"}}> Saved!</label> : ""}
             </form>
         );
+        let adminSettings = data.administrator ? (
+            <div>
+                <tr className="DataList">
+                    <td><i><p className="DataListItem">Administrator Settings</p></i></td>
+                    
+                </tr>
+                <tr className="DataList">
+                    <td><p className="DataListItem">
+                        <form>
+                        <label>
+                            <input type="checkbox" className="" checked={adminPref} onChange={e => updateAdminPref(e.target.value)}/>
+                            View Deleted Comments
+                        </label>
+                        </form>
+                    </p></td>
+                </tr>
+            </div>
+           
+        ) : "";
+        
         return(
             <div className="Page">
                 <h2>Account Information</h2>
@@ -144,8 +174,8 @@ export default function Account({ sessionData, setSessionData }) {
                                         <td>
                                             {
                                                 data?.imageURL && data?.imageURL !== "" ? 
-                                                <img className="pfp" src={"https://api.board.dylangiliberto.com/" + data?.imageURL} /> : 
-                                                <img className="pfp" src="../pfp_default.png" />
+                                                <img className="pfp" alt="User Selected Profile" src={"https://api.board.dylang140.com/" + data?.imageURL} /> : 
+                                                <img className="pfp" alt="Default Profile" src="../pfp_default.png" />
                                             }
                                         </td>
                                         <td>
@@ -183,6 +213,11 @@ export default function Account({ sessionData, setSessionData }) {
                             <td><i><p className="DataListItem">Administrator:</p></i></td>
                             <td><p className="DataListItem">{data.administrator ? "Yes" : "No"}</p></td>
                         </tr>
+                        <tr className="DataList">
+                            <td><i><p className="DataListItem">Test:</p></i></td>
+                            <td><p className="DataListItem">{perms.findPermission(sessionData.permissions, 16) ? "Hey" : ""}</p></td>
+                        </tr>
+                        {data.administrator ? adminSettings : ""}
                     </tbody>
                 </table>
             </div>

@@ -21,7 +21,7 @@ export default function Comment({ comment, sessionData, threadID, setComments })
         e.preventDefault();
         
         let setDeleted = (comment.deleted === 1 ? 0 : 1);
-        let url = "https://api.board.dylangiliberto.com/deleteComment";
+        let url = "https://api.board.dylang140.com/deleteComment";
         let c = await fetch(url, {
             method: 'POST',
             headers: {
@@ -50,7 +50,7 @@ export default function Comment({ comment, sessionData, threadID, setComments })
         e.preventDefault();
         //deletePerm default is 0. On fist attempt, do nothing, set deletePerm to 1. If users confirms, then comment will be erased
         if(deletePerm === 1) {
-            let url = "https://api.board.dylangiliberto.com/deleteCommentPerm";
+            let url = "https://api.board.dylang140.com/deleteCommentPerm";
             let c = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -103,7 +103,7 @@ export default function Comment({ comment, sessionData, threadID, setComments })
     let img = (
         comment['imageURL'] && comment['imageURL'] !== "No Image" 
         ? 
-        <img loading="lazy" className="image" src={"https://api.board.dylangiliberto.com/" + comment['imageURL']}/>
+        <img loading="lazy" className="image" src={"https://api.board.dylang140.com/" + comment['imageURL']}/>
         : ""
     );
 
