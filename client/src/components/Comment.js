@@ -107,6 +107,16 @@ export default function Comment({ comment, sessionData, threadID, setComments })
         : ""
     );
 
+    let body = comment['body'];
+
+    if(body.includes('@')) {
+        let loc = body.indexOf('@');
+        let tag = body.substring(loc, body.indexOf(' ', loc) > loc ? body.indexOf(' ', loc) : body.length); 
+        if(tag.length > 1) {
+            body = <span>{body.substring(0, loc)}<a href={'https://board.dylang140.com/user/' + tag.substring(1)}>{tag}</a>{body.substring(loc + tag.length)}</span>
+        }
+    }
+
     if(comment.deleted === 0 || sessionData.user.administrator === 1) {
         let date = new Date(comment['time_created']);
         let dateFormatted = months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear() + " " + date.getHours() + ":" + date.getMinutes();
@@ -115,16 +125,14 @@ export default function Comment({ comment, sessionData, threadID, setComments })
             
             <div className={comment['deleted'] ? 'commentWrapper commentDeleted' : 'commentWrapper'}>
                 <UserProfileDisplay comment={comment}/>
-                <Link to={'/post/' + comment['ID']} state={{post: comment}} className='Link'>
                 <div className='commentBodyWrapper'>
                     <div className='commentBody'>
-                        <p>{comment['body']}</p>
+                        <p>{body}</p>
                     </div>
                     <div className='commentImg'>
                         {img}
                     </div>
                 </div>
-                </Link>
                  
                 <br/><br/>
                 <table><tbody><tr>
@@ -138,11 +146,7 @@ export default function Comment({ comment, sessionData, threadID, setComments })
                             threadID={threadID} 
                         />
                     </td>
-                    <td>
-                        <Link to={'/post/' + comment['ID']} state={{post: comment}} className='Link'>
-                            ↩️
-                        </Link>
-                    </td>
+                   
                     <td>
                         {(sessionData?.user?.username === comment['username'] ||
                             sessionData?.user?.administrator == true)? 
@@ -162,6 +166,14 @@ export default function Comment({ comment, sessionData, threadID, setComments })
 }
 
 /*
+<Link to={'/post/' + comment['ID']} state={{post: comment}} className='Link'>
+
+ <td>
+    <Link to={'/post/' + comment['ID']} state={{post: comment}} className='Link'>
+        ↩️
+    </Link>
+</td>
+
 return (
             <tr className="commentRow">
                 <td className="commentCell commentPfp">
