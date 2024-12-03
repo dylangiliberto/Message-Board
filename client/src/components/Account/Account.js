@@ -100,10 +100,11 @@ export default function Account({ sessionData, setSessionData }) {
     };
 
     const updateAdminPref = async e => {
-        setAdminPref(!adminPref)
         if(sessionData?.user){
-            sessionData.user.viewDeletedComments = (adminPref ? true : false);
+            sessionData.user.viewDeletedComments = (adminPref ? false : true);
+            setAdminPref(sessionData.user.viewDeletedComments);
         }
+        console.log(sessionData.user.viewDeletedComments);
     };
 
     if(data){
@@ -121,7 +122,7 @@ export default function Account({ sessionData, setSessionData }) {
         }
         let bioForm = (
             <form onSubmit={updateBio}>
-                <textarea className="textArea bioForm" onChange={e => setBio(e.target.value)} value={data.user_bio ? data.user_bio : ""}/>
+                <textarea className="textArea bioForm" onChange={e => setBio(e.target.value)} defaultValue={data.user_bio ? data.user_bio : ""}/>
                     <br/>
                     <input type="submit" value="Update" className="Button" />
                     {bioError === true ? <label style={{color: "red"}}> Could not update bio!</label> : ""}
@@ -138,7 +139,7 @@ export default function Account({ sessionData, setSessionData }) {
                     <td><p className="DataListItem">
                         <form>
                         <label>
-                            <input type="checkbox" className="" checked={adminPref} onChange={e => updateAdminPref(e.target.value)}/>
+                            <input type="checkbox" className="" defaultChecked={adminPref ? 'checked' : ''} onChange={e => updateAdminPref(e.target.value)}/>
                             View Deleted Comments
                         </label>
                         </form>
@@ -147,6 +148,7 @@ export default function Account({ sessionData, setSessionData }) {
             </div>
            
         ) : "";
+        console.log(sessionData.permissions);
         
         return(
             <div className="Page">
@@ -215,7 +217,7 @@ export default function Account({ sessionData, setSessionData }) {
                         </tr>
                         <tr className="DataList">
                             <td><i><p className="DataListItem">Test:</p></i></td>
-                            <td><p className="DataListItem">{perms.findPermission(sessionData.permissions, 16) ? "Hey" : ""}</p></td>
+                            <td><p className="DataListItem">{sessionData.token/*perms.findPermission(sessionData.permissions, 16) ? "Hey" : ""*/}</p></td>
                         </tr>
                         {data.administrator ? adminSettings : ""}
                     </tbody>

@@ -108,24 +108,29 @@ export default function Account({ sessionData, setSessionData }) {
                 table[i][j] = 0;
            }
         }
-        console.log(table);
+        //console.log(table);
+        
         for(let i = 0; i < data.rolePerms.length; i++) {
             //Set table entry to role perm ID so it can be accessed in the checkbox form later
             table[data.rolePerms[i].permissionID - 1][data.rolePerms[i].roleID - 1] = data.rolePerms[i].role_permissionID;
         }
+        
         setPermTable(table);
         return(
             <table style={{border: "solid 1px black", borderCollapse: "collapse"}}>
                 <tbody>
                 <tr key='a'>
-                    <td style={{border: "solid 1px black", borderCollapse: "collapse"}}></td>
+                    <td style={{border: "solid 1px black", borderCollapse: "collapse"}}>Perm ID</td>
+                    <td style={{border: "solid 1px black", borderCollapse: "collapse"}}>Perm Name</td>
                     {data.roles.map((role, index) => {
                         return <td key={index} style={{border: "solid 1px black", borderCollapse: "collapse"}}>{role.roleAbreviation}</td>;
                     })}
+                    <td style={{border: "solid 1px black", borderCollapse: "collapse"}}>Permission Description</td>
                 </tr>
                 {table.map((i, index) => {
                    return (
                    <tr key={index}>
+                        <td key='a' style={{border: "solid 1px black", borderCollapse: "collapse"}}>{data.perms[index].permissionID}</td>
                         <td key='a' style={{border: "solid 1px black", borderCollapse: "collapse"}}>{data.perms[index].permissionName}</td>
                         {i.map((j, indextwo) => {
                             //onChange={e => {let temp = permTable; temp[e.target.value[0]][e.target.value[1]] = (e.target.checked ? )}
@@ -135,6 +140,7 @@ export default function Account({ sessionData, setSessionData }) {
                                 </td>
                             )
                         })}
+                        <td key='a' style={{border: "solid 1px black", borderCollapse: "collapse"}}>{data.perms[index].permissionDescription}</td>
                     </tr>)
                 })}
                 </tbody>
