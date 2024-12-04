@@ -108,7 +108,7 @@ export default function Comment({ comment, sessionData, threadID, setComments })
     );
 
     let body = comment['body'];
-
+    /*
     if(body.includes('@')) {
         let loc = body.indexOf('@');
         let tag = body.substring(loc, body.indexOf(' ', loc) > loc ? body.indexOf(' ', loc) : body.length); 
@@ -116,7 +116,44 @@ export default function Comment({ comment, sessionData, threadID, setComments })
             body = <span>{body.substring(0, loc)}<a href={'https://board.dylang140.com/user/' + tag.substring(1)}>{tag}</a>{body.substring(loc + tag.length)}</span>
         }
     }
+    */
+    if(body.includes('@')) {
+        body = <span>{body.split('@').map((e, i) => {
+            i = i + 1;
+            let first = e.charCodeAt(0);
+            if(i === 1) {
+                return e;
+            }
+            else if(!((first > 64 && first < 99) || (first > 96 && first < 123))) { //Alpha check before proceeding - tags need to start with letter, not num or space
+                return '@' + e;
+            }
+            else if(e.length > 1) { //Create and add link
+                let tag = e.substring(0, e.indexOf(' ') > 0 ? e.indexOf(' ') : e.length); 
+                return <span><a href={'https://board.dylang140.com/user/' + tag}>{'@'+tag}</a>{e.substring(tag.length)}</span>
 
+            }
+        })}</span>
+    }
+    
+   /*
+    let loc = body.indexOf('@');
+    let temp = <span></span>;
+    if(body.includes('@') && body.length > loc + 1) {
+        
+        let tag = body.substring(loc, body.indexOf(' ', loc) > loc ? body.indexOf(' ', loc) : body.length); 
+        body = body.substring(loc);
+        temp += <span>{body.substring(0, loc)}<a href={'https://board.dylang140.com/user/' + tag.substring(1)}>{tag}</a></span>
+
+        loc = body.indexOf('@');
+        while(loc > body.length) {
+            tag = body.substring(loc, body.indexOf(' ', loc) > loc ? body.indexOf(' ', loc) : body.length); 
+            body = body.substring(loc);
+            temp += <span>{body.substring(0, loc)}<a href={'https://board.dylang140.com/user/' + tag.substring(1)}>{tag}</a></span>
+        }
+        temp += <span>{body}</span>
+        console.log(temp);
+    }
+    */
     if(comment.deleted === 0 || sessionData.user.administrator === 1) {
         let date = new Date(comment['time_created']);
         let dateFormatted = months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear() + " " + date.getHours() + ":" + date.getMinutes();
@@ -127,7 +164,7 @@ export default function Comment({ comment, sessionData, threadID, setComments })
                 <UserProfileDisplay comment={comment}/>
                 <div className='commentBodyWrapper'>
                     <div className='commentBody'>
-                        <p>{body}</p>
+                        {body}
                     </div>
                     <div className='commentImg'>
                         {img}

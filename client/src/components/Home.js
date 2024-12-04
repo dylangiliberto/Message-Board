@@ -80,8 +80,8 @@ function getThreadTable(data, user) {
                 <td className="threadCell threadDescCell">{shortDesc}</td>
                 
                 <td className="threadCell threadUserCell"><span style={{"color":('#' + row['displayNameHex'])}}>{row['displayName']}</span></td>
-                <td className="threadCell threadActCell">{months[act.getMonth()] + " " + act.getDate() + " " + act.getFullYear()}</td>
-                <td className="threadCell threadCreateCell">{months[created.getMonth()] + " " + created.getDate() + " " + act.getFullYear()}</td>
+                <td className="threadCell threadActCell">{months[act.getMonth()] + " " + act.getDate() + ", " + act.getFullYear()}</td>
+                <td className="threadCell threadCreateCell">{months[created.getMonth()] + " " + created.getDate() + ", " + created.getFullYear()}</td>
               </tr>
             </tbody></table>
           </div>

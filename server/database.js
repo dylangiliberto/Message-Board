@@ -489,7 +489,7 @@ function getUserPermissions(con, username) {
                 console.log(error);
                 reject();
             }
-            resolve(result);
+            resolve(result.permissionID);
         });
     });
 }
