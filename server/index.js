@@ -332,36 +332,48 @@ app.use("/comments", async (req, res) => {
   const threadID = req.body.id;
   const user = req.body.username;
   const SID = req.body.SID;
-  
-  let sendDeleted = false;
-  
-  if(req?.body?.requestDeleted && user) {
+  let thread = await db.getThreadData(con, threadID);
+  if(thread[0].ID == threadID) {
     let isAdmin = await db.isAdministrator(con, req?.body?.username);
-    if(isAdmin)
-      sendDeleted = true;
-  }
+    if(thread[0]?.deleted == 0 || isAdmin){
+      let sendDeleted = false;
+  
+      if(req?.body?.requestDeleted && user && isAdmin) {
+        sendDeleted = true;
+      }
 
-  console.log("/comments called");
-  console.log("SID: " + SID + " User: " + user);
-  if(!SID || (SID && user)){
-    let verified = SID ? (await sessions.verify(con, SID, user)) : true;
-    if(verified) {
-      let comments = await db.getComments(con, threadID, user, sendDeleted);
-      let thread = await db.getThreadData(con, threadID);
-      let topReplies = {ID: 0};
-      //comments.forEach(async (e) =>  {
-      //  console.log( await db.getTopTwoReplies(con, e.ID));
-      //});
-      db.loggedIn(con, user);
-      //console.log({comments: comments});
-      res.send({comments: comments[0] ? comments : {}, thread: thread, topReplies: topReplies});
+      console.log("/comments called");
+      console.log("SID: " + SID + " User: " + user);
+      if(!SID || (SID && user)){
+        let verified = SID ? (await sessions.verify(con, SID, user)) : true;
+        if(verified) {
+          let comments = await db.getComments(con, threadID, user, sendDeleted);
+          
+          let topReplies = {ID: 0};
+          //comments.forEach(async (e) =>  {
+          //  console.log( await db.getTopTwoReplies(con, e.ID));
+          //});
+          db.loggedIn(con, user);
+          //console.log({comments: comments});
+          res.send({comments: comments[0] ? comments : {}, thread: thread, topReplies: topReplies});
+        }
+        else {
+          res.sendStatus(403);
+        }
+      }
+      else {
+        res.sendStatus(403);
+      }
     }
-    else {
-      res.sendStatus(403);
+    else{
+      console.log("hey1");
+      res.sendStatus(404);
     }
   }
   else {
-    res.sendStatus(403);
+    console.log("hey2");
+
+    res.sendStatus(404);
   }
 });
 

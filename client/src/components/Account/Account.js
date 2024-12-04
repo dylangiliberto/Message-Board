@@ -215,7 +215,7 @@ export default function Account({ sessionData, setSessionData }) {
                         </tr>
                         <tr className="DataList">
                             <td><i><p className="DataListItem">Test:</p></i></td>
-                            <td><p className="DataListItem">{perms.findPermission(sessionData.permissions, 16) ? "Hey" : ""}</p></td>
+                            <td><p className="DataListItem">{}</p></td>
                         </tr>
                         {data.administrator ? adminSettings : ""}
                     </tbody>
