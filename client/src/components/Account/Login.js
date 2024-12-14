@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import '../../App.css';
 import {
   Navigate,
+  useLocation
 } from "react-router-dom";
 
 async function loginUser(credentials, setUser) {
@@ -20,11 +21,12 @@ async function loginUser(credentials, setUser) {
   return token;
 }
 
-export default function Login({ sessionData, setSessionData }) {
+export default function Login({ sessionData, setSessionData, redirectTo}) {
   const [username, setUserName] = useState();
   const [password, setPassword] = useState();
   let [success, setSuccess] = useState(true);
   let [errorMessage, setErrorMessage] = useState();
+  const {state} = useLocation();
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -33,6 +35,7 @@ export default function Login({ sessionData, setSessionData }) {
       password
     }, setSessionData);
     if(res?.token){
+      res.user.viewDeletedComments = res.user.administrator;
       setSessionData(res);
     }
     else {
@@ -42,6 +45,7 @@ export default function Login({ sessionData, setSessionData }) {
     }
   }
   if(!sessionData?.token){
+   
     let err = <h3 style={{color: 'red'}}>{errorMessage}</h3>;
     return(
       <div className="login-wrapper Page">
@@ -65,6 +69,9 @@ export default function Login({ sessionData, setSessionData }) {
     )
   }
   else {
+    if(state?.redirectTo){
+      return <Navigate replace to={state.redirectTo} />;
+    }    
     return <Navigate replace to="/" />;
   }
 }

@@ -55,7 +55,7 @@ app.use("/user", async (req, res) => {
 });
 
 app.use("/userPublic", async (req, res) => {
-  console.log("Sending Public User Data! Username: " + req.body.username);
+  console.log("userPublic - " + (req?.body?.username ? req?.body?.username : " No User"));
   let d = await db.getUserData(con, req.body.username);
   //console.log(d);
   res.send({
@@ -108,10 +108,10 @@ app.use("/postComment", upload.single('image'), async (req, res) => {
   if(user && SID && thread) {
     let verified = await sessions.verify(con, SID, user);
     let file = req.file ? req.file.path : "No Image";
-    console.log("File Path: " + file);
-    console.log("Verified?: " + verified);
+    //console.log("File Path: " + file);
+    //console.log("Verified?: " + verified);
     if(verified === true && user && (req.body.comment || file) && thread){
-      console.log("Verified! Posting Comment! Username: " + user);
+      console.log("postComment - " + (req?.body?.username ? req?.body?.username : " No User") + file);
       db.postComment(con, req.body.comment, thread, user, file);
         //const imagePath = req.file.path;
         //db.postComment(con, req.body.comment, thread, user, imagePath);
@@ -187,7 +187,7 @@ app.use("/deleteCommentPerm", async (req, res) => {
 
 app.use("/login", async (req, res) => {
   if(req.body.username && req.body.password){
-    console.log("User " + req.body.username + " attempting log in...");
+    console.log("login - " + (req?.body?.username ? req?.body?.username : " No User"));
     let user = await db.getUserData(con, req.body.username).then(function(rows) {
       return rows;
     });
@@ -232,7 +232,7 @@ app.use("/login", async (req, res) => {
 
 app.use("/logout", async (req, res) => {
   let SID = req.body.token;
-  console.log("Logging Out: " + SID);
+  console.log("logout - " + SID);
   //console.log(req.body);
   if(SID)
     db.destroySession(con, SID);
@@ -254,11 +254,42 @@ app.use("/threads", async (req, res) => {
     sql = "SELECT `thread`.*, `users`.`displayName`, `users`.`displayNameHex` FROM `thread` LEFT JOIN `users` ON `users`.`username` = `thread`.`username`" +
         "WHERE `archived` = 0 AND `deleted` = 0 ORDER BY `pinned` DESC, `last_activity` DESC";
   }
-  console.log("/threads called....");
+  console.log("threads - " + (req?.body?.username ? req?.body?.username : " No User"));
   con.query(sql, function (err, result, fields) {
     if (err) throw err;
     res.send({
       threads: result
+    });
+  });
+});
+
+app.use("/threadsPage", async (req, res) => {
+  let sendDeleted = false;
+  let requestNum = req.body.requestNum;
+  let requestStart = req.body.requestStart;
+  let threadsCount;
+  
+  if(req?.body?.requestDeleted) {
+    let isAdmin = await db.isAdministrator(con, req?.body?.username);
+    if(isAdmin)
+      sendDeleted = true;
+  }
+  if(sendDeleted){
+    sql = "SELECT `thread`.*, `users`.`displayName`, `users`.`displayNameHex` FROM `thread` LEFT JOIN `users` ON `users`.`username` = `thread`.`username`" +
+        "WHERE `archived` = 0 ORDER BY `pinned` DESC, `last_activity` DESC LIMIT ? OFFSET ?";
+        threadsCount = await db.countThreads(con, true);
+  }
+  else {
+    sql = "SELECT `thread`.*, `users`.`displayName`, `users`.`displayNameHex` FROM `thread` LEFT JOIN `users` ON `users`.`username` = `thread`.`username`" +
+        "WHERE `archived` = 0 AND `deleted` = 0 ORDER BY `pinned` DESC, `last_activity` DESC LIMIT ? OFFSET ?";
+        threadsCount = await db.countThreads(con, false);
+  }
+  console.log("threadsPage - " + (req?.body?.username ? req?.body?.username : " No User"));
+  con.query(sql, [requestNum, requestStart],function (err, result, fields) {
+    if (err) throw err;
+    res.send({
+      threads: result,
+      threadsCount: threadsCount
     });
   });
 });

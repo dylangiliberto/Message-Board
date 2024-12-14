@@ -12,6 +12,7 @@ import {
   renderMatches
 } from "react-router-dom";
 
+
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 function getDummyThreads() {
@@ -75,13 +76,13 @@ function getThreadTable(data, user) {
           <div className="threadRowDiv" style={{backgroundColor: row['deleted'] ? '#d2abab' : ''}}>
             <table className="threadRow"><tbody>
               <tr key={row.ID} className="threadRow">
-                <td className="threadCell threadPinCell">{row['pinned'] === 1 ? "📌" : ""}<br/>{row['NumComments']} 💬 </td>
-                <td className="threadCell threadTitleCell"><b>{row['title']}</b></td>
-                <td className="threadCell threadDescCell">{shortDesc}</td>
+                <td key={row.ID + "a"} className="threadCell threadPinCell">{row['pinned'] === 1 ? "📌" : ""}<br/>{row['NumComments']} 💬 </td>
+                <td key={row.ID + "b"} className="threadCell threadTitleCell"><b>{row['title']}</b></td>
+                <td key={row.ID + "c"} className="threadCell threadDescCell">{shortDesc}</td>
                 
-                <td className="threadCell threadUserCell"><span style={{"color":('#' + row['displayNameHex'])}}>{row['displayName']}</span></td>
-                <td className="threadCell threadActCell">{months[act.getMonth()] + " " + act.getDate() + ", " + act.getFullYear()}</td>
-                <td className="threadCell threadCreateCell">{months[created.getMonth()] + " " + created.getDate() + ", " + created.getFullYear()}</td>
+                <td key={row.ID + "d"} className="threadCell threadUserCell"><span style={{"color":('#' + row['displayNameHex'])}}>{row['displayName']}</span></td>
+                <td key={row.ID + "e"} className="threadCell threadActCell">{months[act.getMonth()] + " " + act.getDate() + ", " + act.getFullYear()}</td>
+                <td key={row.ID + "f"} className="threadCell threadCreateCell">{months[created.getMonth()] + " " + created.getDate() + ", " + created.getFullYear()}</td>
               </tr>
             </tbody></table>
           </div>
@@ -94,14 +95,14 @@ function getThreadTable(data, user) {
       <div>
       <table className="threadTable">
         <thead>
-          <tr>
-            <th className="threadCell threadPinCell"></th>
-            <th className="threadCell threadTitleCell">Thread Title</th>
-            <th className="threadCell threadDescCell">Thread Description</th>
+          <tr key={"head"}>
+            <th key={"heada"} className="threadCell threadPinCell"></th>
+            <th key={"headb"} className="threadCell threadTitleCell">Thread Title</th>
+            <th key={"headc"} className="threadCell threadDescCell">Thread Description</th>
             
-            <th className="threadCell threadUsereCell">Creator</th>
-            <th className="threadCell threadActCell">Last Activity</th>
-            <th className="threadCell threadCreateCell">Date Created</th>
+            <th key={"headd"}className="threadCell threadUsereCell">Creator</th>
+            <th key={"heade"} className="threadCell threadActCell">Last Activity</th>
+            <th key={"headf"} className="threadCell threadCreateCell">Date Created</th>
           </tr>
         </thead>
       </table>
@@ -114,57 +115,113 @@ function getThreadTable(data, user) {
 
 export default function Home({ sessionData }) {
   let [threads, setThreads] = useState();
+  let [threadsPage, setThreadsPage] = useState(0);
+  let [countThreads, setCountThreads] = useState(60);
+  let [load, setLoad] = useState(true);
+  let [hasNextPage, setHasNextPage] = useState(true);
+  let [hasPrevPage, setHasPrevPage] = useState(false);
+
+  const threadsPerPage = 10;
 
   useEffect(() => {
-    if(!threads){
-      fetch("https://api.board.dylang140.com/threads", {
+    if(!threads || load == true){
+      setLoad(false);
+      fetch("https://api.board.dylang140.com/threadsPage", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({requestDeleted: sessionData?.user?.administrator, username: sessionData?.user?.username})
+        body: JSON.stringify({requestDeleted: sessionData?.user?.administrator, username: sessionData?.user?.username, requestNum: threadsPerPage, requestStart: threadsPage*threadsPerPage})
       })
         .then((res) => res.json())
-        .then((data) => setThreads(data.threads));
-      //console.log(threads);
+        .then((data) => {
+          setCountThreads(data.threadsCount);
+          setThreads(data.threads);
+        });
     }
   });
 
+  const nextPage = () => {
+    //let newCount = (countThreads / 20) - 1 > threadsPage ? threadsPage + 1 : threadsPage;
+    if((countThreads / threadsPerPage) - 1 > threadsPage) {
+      //console.log(threadsPage + " "  + " " + load);
+      setThreadsPage(threadsPage + 1);
+      setLoad(true);
+      setHasPrevPage(true);
+    }
+    else {
+      setHasNextPage(false);
+    }
+  }
+  const prevPage = () => {
+    let newCount = threadsPage > 0 ? threadsPage - 1 : 0;
+    //console.log(threadsPage + " " + newCount + " " + load);
+    if(newCount != threadsPage) {
+      setThreadsPage(newCount);
+      setLoad(true);
+      setHasNextPage(true);
+    }
+    else {
+      setHasPrevPage(false);
+    }
+  }
+
+  let nextButton = (<div>Next<input type="image" src="../nextArrow.png" height="30px" onClick={() => nextPage()}style={{verticalAlign: 'middle'}} /></div>);
+  let prevButton = (<div><input type="image" src="../prevArrow.png" height="30px" onClick={() => prevPage()} style={{verticalAlign: 'middle'}}/>Previous</div>);
+  let dumbButton = (<button className="Button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>);
+  let buttons = (
+    <div style={{margin: 'auto', width: '50%', padding: '10px', textAlign: 'center'}}>
+      {hasPrevPage ? prevButton : dumbButton}
+      &nbsp; Page {threadsPage + 1} &nbsp;
+      {hasNextPage ? nextButton : dumbButton}
+    </div>
+  );
+
   return (
     <div className="Page">
-      <table style={{width: '96%'}}><tbody><tr>
-        <td>
-          <h1>Spaces </h1>
-        </td>
-        <td>
-          <div className='tooltip' style={{float: 'right'}}>
-            <span className='tooltipcontents'>
-              New Space
-            </span>
-            <Link to='/newThread' style={{textDecoration: 'none'}}>
-              <h1>
-                  +
-              </h1>
-            </Link>
-          </div>
-        </td>
-      </tr></tbody></table>
+      <table style={{width: '100%'}}><tbody>
+        <tr key={"space"}>
+          <td>
+            <h1>Spaces </h1>
+          </td>
+          <td>
+            <div className='tooltip' style={{float: 'right'}}>
+              <span className='tooltipcontents'>
+                New Space
+              </span>
+              <Link to='/newThread' style={{textDecoration: 'none'}}>
+                <h1>
+                    +
+                </h1>
+              </Link>
+            </div>
+          </td>
+        </tr>
+        <tr key={"nav"}>
+          <td>
+            {prevButton}
+          </td>
+          <td>
+            <div className='tooltip' style={{float: 'right'}}>
+             {nextButton}
+            </div>
+          </td>
+        </tr>
+      </tbody></table>
       {!threads ? getDummyThreads() : getThreadTable(threads, sessionData?.user)} 
+      <br/>
+      <table style={{width: '100%'}}><tbody>
+        <tr key={"nav"}>
+          <td>
+            {prevButton}
+          </td>
+          <td>
+            <div className='tooltip' style={{float: 'right'}}>
+             {nextButton}
+            </div>
+          </td>
+        </tr>
+      </tbody></table>
     </div>
   );
 }
-
-
-/*
-<td>{row['title']}</td>
-          <td>{row['description']}</td>
-          <td>{row['username']}</td>
-          <td>{row['last_activity']}</td>
-          <td>{row['date_created']}</td>
-
-
-td><Link to="/components/viewThread" state={{threadID: row['ID']}}>{row['description']}</Link></td>
-          <td><Link to="/components/viewThread" state={{threadID: row['ID']}}>{row['username']}</Link></td>
-          <td><Link to="/components/viewThread" state={{threadID: row['ID']}}>{months[act.getMonth()] + " " + act.getDate() + " " + act.getFullYear()}</Link></td>
-          <td><Link to="/components/viewThread" state={{threadID: row['ID']}}>{months[created.getMonth()] + created.getDate() + " " + act.getFullYear()}</Link></td>
-*/

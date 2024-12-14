@@ -13,7 +13,10 @@ import {
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
+/*
 function getThreadTable(data, user) {
+  
+  
   let tbody = data.map(row => {
     let act = new Date(row['last_activity']);
     let created = new Date(row['date_created']);
@@ -83,4 +86,10 @@ export default function ArchivedThreads({ sessionData }) {
       {!threads ? "" : getThreadTable(threads, sessionData?.user)} 
     </div>
   );
+  
+  
+}
+  */
+export default function ArchivedThreads({ sessionData }) {
+  return (<div></div>)
 }

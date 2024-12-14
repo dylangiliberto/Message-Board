@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 
 
-export default function ThreadManager({ threadData, sessionData={sessionData}, setForbidden, setThreadData}) {
+export default function ThreadManager({ threadData, sessionData, setForbidden, setThreadData}) {
     let [locked, setLocked] = useState(threadData.locked);
     let [deleted, setDeleted] = useState(threadData.deleted);
     let [archived, setArchived] = useState(threadData.archived);

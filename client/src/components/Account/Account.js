@@ -140,16 +140,14 @@ export default function Account({ sessionData, setSessionData }) {
                         <form>
                         <label>
                             <input type="checkbox" className="" defaultChecked={adminPref ? 'checked' : ''} onChange={e => updateAdminPref(e.target.value)}/>
-                            View Deleted Comments
+                            View Deleted Comments <i>(Enabled by Default)</i>
                         </label>
                         </form>
                     </p></td>
                 </tr>
             </div>
            
-        ) : "";
-        console.log(sessionData.permissions);
-        
+        ) : "";        
         return(
             <div className="Page">
                 <h2>Account Information</h2>

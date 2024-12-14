@@ -17,6 +17,7 @@ import NewThread from './components/NewThread';
 import ArchivedThreads from './components/ArchivedThreads';
 import Post from './components/Post';
 import Admin from './components/Account/Admin';
+import NotFound from './components/NotFound';
 import {
   BrowserRouter as Router,
   Route,
@@ -71,19 +72,19 @@ function App() {
           <Route path={"/forbidden"} element={<Logout sessionData={sessionData} setSessionData={setSessionData} forbidden={true}/>} />
           <Route path={"/user/:username"} element={<UserAccount sessionData={sessionData} setSessionData={setSessionData}/>} />
           <Route path={"/newthread"} element={<NewThread sessionData={sessionData} setSessionData={setSessionData} />} />
-          <Route path={"/archived"} element={<ArchivedThreads sessionData={sessionData} />} />
           <Route path="/space">
             <Route path=":threadID" element={<Thread sessionData={sessionData} />} />
           </Route>
           <Route path="/post">
             <Route path=":postID" element={<Post sessionData={sessionData} />} />
           </Route>
+          <Route path={"/*"} element={<NotFound/>} />
         </Routes>
         <Footer server={server} siteVersion={siteVersion}/>
       </Router>
     </div>
   );
-  
+  //<Route path={"/archived"} element={<ArchivedThreads sessionData={sessionData} />} />
 }
 
 export default App;

@@ -17,11 +17,7 @@ export default function NavBarMain({ sessionData, activeTab }) {
             }>
               Home
           </NavLink>
-          <NavLink to="/archived" className={({ isActive }) =>
-              isActive ? activeClassName : className
-            }>
-            Archived Threads
-          </NavLink>
+          
           <NavLink to="/about" className={({ isActive }) =>
               isActive ? activeClassName : className
             }>
@@ -34,4 +30,11 @@ export default function NavBarMain({ sessionData, activeTab }) {
     </div>
   );
 }
+/*
+<NavLink to="/archived" className={({ isActive }) =>
+    isActive ? activeClassName : className
+  }>
+  Archived Threads
+</NavLink>
+*/
 

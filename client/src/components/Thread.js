@@ -29,7 +29,7 @@ export default function Thread({ sessionData }) {
           body: JSON.stringify({username: sessionData?.user?.username, 
             SID: sessionData?.token, 
             id: threadID,
-            requestDeleted: (sessionData?.user?.administrator && sessionData?.user?.viewDeletedComments == true)})
+            requestDeleted: (sessionData?.user?.administrator && sessionData?.user?.viewDeletedComments)})
         });
         //console.log('TEST' + sessionData?.user?.username);
         //console.log('TEST' + sessionData?.user?.administrator);
@@ -64,7 +64,7 @@ export default function Thread({ sessionData }) {
           
               {comments[0].username ? 
                 comments.map(row => {
-                  if(row.deleted === 0 || (sessionData?.user?.administrator === 1 && sessionData?.user?.viewDeletedComments === true)){
+                  if(row.deleted === 0 || (sessionData?.user?.administrator === 1 && sessionData?.user?.viewDeletedComments)){
                     return(
                         <Comment key={row.ID} comment={row} sessionData={sessionData} threadID={threadID} setComments={setComments}/>
                     );

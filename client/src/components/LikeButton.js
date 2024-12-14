@@ -2,18 +2,20 @@ import React, { useEffect, useState } from 'react';
 import '../App.css';
 import '../styles/likeButton.css';
 import {
-    Navigate
+    Navigate,
+    useLocation,
+    useNavigate
   } from "react-router-dom";
 
 export default function LikeButton({ initial, initCount, comment, threadID, sessionData }) {
     let [liked, setLiked] = useState(initial);
     let [count, setCount] = useState(initCount);
     let [forbidden, setForbidden] = useState(false);
+    let [notLoggedIn, setNotLoggedIn] = useState(false);
 
     const likeComment = async e => {
         e.preventDefault();
         if(sessionData?.token) {
-            console.log("Liking Comment");
             //console.log("Comment: " + comment + " Thread: " + threadID + " User: " + username + " Token: " + token);
             let url = "https://api.board.dylang140.com/likeComment";
             let c = await fetch(url, {
@@ -24,7 +26,6 @@ export default function LikeButton({ initial, initCount, comment, threadID, sess
                 body: JSON.stringify({comment: comment, thread: threadID, username: sessionData.user.username, SID: sessionData.token })
             });
             if(c.status == 403) {
-                console.log("Forbidden!");
                 setForbidden(true);
             }
             let json = await c.json();
@@ -33,11 +34,16 @@ export default function LikeButton({ initial, initCount, comment, threadID, sess
             setCount(json.count.likes);
         }
         else {
-            console.log("Not Logged In");
+            setNotLoggedIn(true);
         }
     }
 
-    if(!forbidden) {
+    const location = useLocation().pathname;
+
+    const navigate = useNavigate();
+    
+
+    if(!forbidden && notLoggedIn == false) {
         return (
             <table>
                 <tbody>
@@ -52,6 +58,10 @@ export default function LikeButton({ initial, initCount, comment, threadID, sess
                 </tbody>
             </table>
         );
+    }
+    else if(notLoggedIn) {
+        navigate('/login', { state: { redirectTo: location } });
+        //return (<Navigate replace to={"/login"} redirectTo={location} />);
     }
     else {
         return (<Navigate replace to="/forbidden" />);

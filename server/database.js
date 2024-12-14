@@ -97,6 +97,23 @@ function getUserSessions(con, username) {
     });
 }
 
+function countThreads(con, deleted) {
+    let sql = "SELECT COUNT (*) FROM `thread` WHERE `archived` = 0 AND`deleted` = 0";
+    if(deleted) {
+        sql = "SELECT COUNT (*) FROM `thread` WHERE `archived` = 0";
+    }
+    
+    return new Promise(function(resolve, reject) {
+       con.query(sql, function(err, result) {
+            if(err)
+                reject(err);
+            else{
+                resolve(result[0]["COUNT (*)"]);
+            }
+        });
+    });
+}
+
 function createSession(con, SID, username) {
     let sql = "INSERT INTO `sessions` (ID, username) VALUES (\"" + SID + "\", \"" + username + "\")";
 
@@ -114,7 +131,6 @@ function getUserData(con, username) {
 
     return new Promise(function(resolve, reject) {
         con.query(sql, [username], function (err, result) {
-            //console.log(result);
             if (err) {
                 return reject(err);
             }
@@ -135,7 +151,6 @@ function loggedIn(con, username) {
 
 function isCommentAuthor(con, comment, username) {
     let sql = "SELECT `username` FROM  `comment` WHERE `id` = ?";
-    console.log(comment.ID + " " + username);
     return new Promise(function(resolve, reject) {
         con.query(sql, [comment.ID], function (err, result) {
             if(err)
@@ -248,7 +263,6 @@ function isCommentLiked(con, comment, user) {
     let sql = "SELECT COUNT(*) FROM `likes` WHERE `username` = ? AND `comment_id` = ?";
     return new Promise(function(resolve, reject) {
         con.query(sql, [user, comment], function (err, result) {
-            //console.log(result[0]['COUNT(*)']);
             if(err)
                 return reject(err);
             if(result[0]['COUNT(*)'] > 0)
@@ -323,7 +337,6 @@ function archiveThread(con, thread, archived) {
 
 function updateBio(con, bio, username) {
     let sql = "UPDATE `users` SET `user_bio` = ? WHERE `username` = ? LIMIT 1";
-    console.log("Set new Bio!");
     con.query(sql, [bio, username]);
 }
 
@@ -365,7 +378,7 @@ function updatePfp(con, pfpURL, username) {
 function isAdministrator(con, username) {
     if(username){
         let sql = "SELECT administrator FROM users WHERE username = ?";
-        console.log('Verifying Admin');
+        console.log('Verifying Admin for' + username);
         return new Promise(function(resolve, reject) {
             con.query(sql, [username], function (err, result) {
                 if(err)
@@ -531,4 +544,4 @@ module.exports = { getConnection, getVersion, getUserData, createUser, doesSIDEx
     createSession, destroySession, postComment, getComments, isCommentLiked, likeComment, unlikeComment, getThreadData, deleteComment, deleteCommentPerm,
     loggedIn, createThread, lockThread, deleteThread, archiveThread, updateBio, updatePfp, updateUsername, updateDisplayName, isAdministrator,
     getTopTwoReplies, isCommentAuthor, getRolesList, getPermissionsList, getRolesPermissionsList, setPermission, addRole, assignRole, assignRoles, getUserRoles,
-    getUserPermissions, getUsersHighestRole, userHasPermission };
+    getUserPermissions, getUsersHighestRole, userHasPermission, countThreads };
