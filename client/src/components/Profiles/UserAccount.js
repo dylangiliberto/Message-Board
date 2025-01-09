@@ -4,6 +4,8 @@ import {
   } from "react-router-dom";
 import '../../App.css';
 import UserRolesForm from './UserRolesForm';
+import UserAdminControls from './UserAdminControls';
+
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -26,7 +28,6 @@ export default function UserAccount({ sessionData, setSessionData }) {
                     body: JSON.stringify(sendData)
                     })
                 const json = await response.json();
-                console.log(json.user);
                 setData(json.user);
             } catch (error) {
                 console.log("error", error);
@@ -84,6 +85,8 @@ export default function UserAccount({ sessionData, setSessionData }) {
                 {data.administrator ? "Yes" : "No"}
                 <br/>
                 <UserRolesForm sessionData={sessionData} setSessionData={setSessionData} username={data.username}/>
+                <br/><br/>
+                <UserAdminControls sessionData={sessionData} setSessionData={setSessionData} username={data.username}/>
 
             </div>
         )

@@ -22,10 +22,12 @@ httpModule.createServer(app).listen(PORT, () => {
 });
 
 let con = db.getConnection();
+db.logAction(con, "SERVER", "Started API", "", "0.0.0.0");
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.enable('trust proxy');
 
 app.get('/', (req,res)=>{
   res.send("Hello from express server.")
@@ -56,11 +58,64 @@ app.use("/user", async (req, res) => {
 
 app.use("/userPublic", async (req, res) => {
   console.log("userPublic - " + (req?.body?.username ? req?.body?.username : " No User"));
-  let d = await db.getUserData(con, req.body.username);
+  db.logAction(con, "", "userPublic", req?.body?.username,req.ip);
+  let d = await db.getPublicUserData(con, req.body.username);
   //console.log(d);
   res.send({
     user: d
   })
+});
+
+app.use("/logs", async (req, res) => {
+  let user = req?.body?.username;
+  console.log("logs - " + (req?.body?.username ? req?.body?.username : " No User"));
+  db.logAction(con, user, "logs", "",req.ip);
+  let verified = await sessions.verify(con, req.body.SID, user);
+  let isAdmin = await db.isAdministrator(con, user);
+  if(verified && isAdmin === 1){
+    let d = await db.getLogs(con, req.body.requestNum, req.body.offsetNum);
+    res.send({
+      user: d
+    })
+  }
+ 
+});
+
+app.use("/userAdmin", async (req, res) => {
+  console.log("userAdmin - " + (req?.body?.username ? req?.body?.username : " No User"));
+  let verified = await sessions.verify(con, req.body.SID, req.body.username);
+  let isAdmin = await db.isAdministrator(con, req.body.username);
+  console.log("User Admin: " + req.body.username + " requesting " + req.body.targetUsername);
+  console.log(verified + " " + isAdmin)
+  if(verified && isAdmin){
+    let d = await db.getUserData(con, req.body.targetUsername);
+    //console.log(d);
+    res.send({
+      user: d
+    });
+  }
+});
+
+app.use("/lockAccount", async (req, res) => {
+  console.log("Locking Account: " + (req?.body?.targetUsername ? req?.body?.targetUsername : " No User"));
+  let verified = await sessions.verify(con, req.body.SID, req.body.username);
+  let isAdmin = await db.isAdministrator(con, req.body.username);
+  if(verified && isAdmin) {
+    db.logAction(con, req.body.username, "lockAccount", req?.body?.targetUsername, req.ip);
+    db.lockAccount(con, req.body.targetUsername);
+    res.sendStatus(200);
+  }
+});
+
+app.use("/unlockAccount", async (req, res) => {
+  console.log("Locking Account: " + (req?.body?.targetUsername ? req?.body?.targetUsername : " No User"));
+  let verified = await sessions.verify(con, req.body.SID, req.body.username);
+  let isAdmin = await db.isAdministrator(con, req.body.username);
+  db.logAction(con, req.body.username, "unlockAccount", req?.body?.targetUsername, req.ip);
+  if(verified && isAdmin) {
+    db.unlockAccount(con, req.body.targetUsername);
+    res.sendStatus(200);
+  }
 });
 
 app.use("/usernameAvaliable", async (req, res) => {
@@ -76,6 +131,33 @@ app.use("/usernameAvaliable", async (req, res) => {
   }
 });
 
+app.use("/setPassword", async (req, res) => { //Change password for 'targetUsername' otherwise `username`
+  let username = req.body.username;
+  let target = (req.body?.targetUsername ? req.body.targetUsername : username);
+  let newPassword = req.body.password;
+  let verified = await sessions.verify(con, req.body.SID, username);
+  let isAdmin = await db.isAdministrator(con, username);
+  console.log(newPassword);
+  if(verified && isAdmin === 1) {
+    bcrypt.hash(newPassword, 10, function(err, hash) {
+      if(!err) {
+        db.logAction(con, req.body.username, "setPassword", target, req.ip);
+        db.setPassword(con, target, hash);
+        console.log("Set Password for " + target);
+        res.sendStatus(200);
+      }
+      else {
+        console.log("Error Encrypting Password!");
+        res.sendStatus(500);
+      }
+    });
+  }
+  else {
+    console.log("Did Not Change Password");
+    res.sendStatus(500);
+  }
+});
+
 app.use("/register", async (req, res) => {
   let username = req.body.username;
   let password = req.body.password;
@@ -84,6 +166,7 @@ app.use("/register", async (req, res) => {
   if(!taken) {
     bcrypt.hash(password, 10, function(err, hash) {
       if(!err) {
+        db.logAction(con, username, "register", username, req.ip);
         db.createUser(con, username, hash, email);
         db.assignRole(con, username, 1); //Assign default 'User' role to new users
         console.log("Registered User " + username);
@@ -111,6 +194,7 @@ app.use("/postComment", upload.single('image'), async (req, res) => {
     //console.log("File Path: " + file);
     //console.log("Verified?: " + verified);
     if(verified === true && user && (req.body.comment || file) && thread){
+      db.logAction(con, user, "postComment", thread, req.ip);
       console.log("postComment - " + (req?.body?.username ? req?.body?.username : " No User") + file);
       db.postComment(con, req.body.comment, thread, user, file);
         //const imagePath = req.file.path;
@@ -154,6 +238,7 @@ app.use("/deleteComment", async (req, res) => {
   let admin = await db.isAdministrator(con, user);
   
   if(comment && user && SID && thread && verified && (author || admin)){
+    db.logAction(con, req.body.username, "deleteComment", comment.ID, req.ip);
     console.log("Deleteing/Restoring Comment ID: " + comment.ID + " User: " + user + " SID: " + SID + "SetDeleted: " + setDeleted);
     db.deleteComment(con, setDeleted, comment.ID, thread);
     let comments = await db.getComments(con, thread, user, req.body.requestDeleted);
@@ -174,6 +259,7 @@ app.use("/deleteCommentPerm", async (req, res) => {
   let admin = await db.isAdministrator(con, user);
 
   if(comment && user && SID && thread && verified && admin){
+    db.logAction(con, req.body.username, "deleteCommentPerm", comment, req.ip);
     console.log("Permanently Deleteing Comment ID: " + comment + " User: " + user + " SID: " + SID);
     db.deleteCommentPerm(con, comment, thread);
     let comments = await db.getComments(con, thread, user, req.body.requestDeleted);
@@ -192,32 +278,39 @@ app.use("/login", async (req, res) => {
       return rows;
     });
     if(user.username === req.body.username) {
-      let token = await sessions.generateSID(con);
-      let perms = await db.getUserPermissions(con, req.body.username);
-      let pass = req.body.password;
-      let hash = user.password;
-      hash = hash.replace(/^\$2y(.+)$/i, '$2a$1');
+      if(user.locked === 0){
+        db.logAction(con, req.body.username, "login", "", req.ip);
+        let token = await sessions.generateSID(con);
+        let perms = await db.getUserPermissions(con, req.body.username);
+        let pass = req.body.password;
+        let hash = user.password;
+        hash = hash.replace(/^\$2y(.+)$/i, '$2a$1');
 
-      bcrypt.compare(pass, hash, function(err, v) {
-        console.log("Verified: " + v);
-        let verified = v || false;
-        if(verified) {
-          console.log("User " + req.body.username + " Logged in!");
-          //console.log("Session ID: " + token);
-          sessions.registerSID(con, token, req.body.username);
-          console.log(perms);
-          db.loggedIn(con, req.body.username);
-          res.send({
-            user: user,
-            permissions: perms,
-            token: token
-          });
-        }
-        else {
-          res.statusMessage = 'Incorrect Password';
-          res.sendStatus(403);
-        }
-      });
+        bcrypt.compare(pass, hash, function(err, v) {
+          console.log("Verified: " + v);
+          let verified = v || false;
+          if(verified) {
+            console.log("User " + req.body.username + " Logged in!");
+            //console.log("Session ID: " + token);
+            sessions.registerSID(con, token, req.body.username);
+            console.log(perms);
+            db.loggedIn(con, req.body.username);
+            res.send({
+              user: user,
+              permissions: perms,
+              token: token
+            });
+          }
+          else {
+            res.statusMessage = 'Incorrect Password';
+            res.sendStatus(403);
+          }
+        });
+      }
+      else{
+        res.statusMessage = 'Account Locked';
+        res.sendStatus(403);
+      }
     }
     else {
       res.statusMessage = 'User Not Found';
@@ -234,8 +327,10 @@ app.use("/logout", async (req, res) => {
   let SID = req.body.token;
   console.log("logout - " + SID);
   //console.log(req.body);
-  if(SID)
+  if(SID){
+    db.logAction(con, req.body.username, "logout", '', req.ip);
     db.destroySession(con, SID);
+  }
 });
 
 app.use("/threads", async (req, res) => {
@@ -255,6 +350,7 @@ app.use("/threads", async (req, res) => {
         "WHERE `archived` = 0 AND `deleted` = 0 ORDER BY `pinned` DESC, `last_activity` DESC";
   }
   console.log("threads - " + (req?.body?.username ? req?.body?.username : " No User"));
+  db.logAction(con, req.body.username, "threads", '', req.ip);
   con.query(sql, function (err, result, fields) {
     if (err) throw err;
     res.send({
@@ -284,6 +380,7 @@ app.use("/threadsPage", async (req, res) => {
         "WHERE `archived` = 0 AND `deleted` = 0 ORDER BY `pinned` DESC, `last_activity` DESC LIMIT ? OFFSET ?";
         threadsCount = await db.countThreads(con, false);
   }
+  db.logAction(con, req.body.username, "threadsPage", '', req.ip);
   console.log("threadsPage - " + (req?.body?.username ? req?.body?.username : " No User"));
   con.query(sql, [requestNum, requestStart],function (err, result, fields) {
     if (err) throw err;
@@ -327,6 +424,7 @@ app.use("/newThread", async (req, res) => {
   console.log("Creating Thread: " + title);
   let verified = await sessions.verify(con, SID, username);
   if(verified) {
+    db.logAction(con, req.body.username, "newThread", title, req.ip);
     db.createThread(con, title, desc, username);
     db.loggedIn(con, username);
     res.sendStatus(200);
@@ -348,6 +446,7 @@ app.use("/updateThread", async (req, res) => {
   console.log(setDeleted === 1 ? "Deleting Thread..." : "Restoring Thread...");
   let verified = await sessions.verify(con, SID, username);
   if(verified) {
+    db.logAction(con, req.body.username, "updateThread", thread, req.ip);
     db.lockThread(con, thread, (setLocked ? 1 : 0));
     db.deleteThread(con, thread, (setDeleted ? 1 : 0));
     db.archiveThread(con, thread, (setArchived ? 1 : 0));
@@ -372,7 +471,7 @@ app.use("/comments", async (req, res) => {
       if(req?.body?.requestDeleted && user && isAdmin) {
         sendDeleted = true;
       }
-
+      db.logAction(con, req.body.username, "comments", threadID, req.ip);
       console.log("/comments called");
       console.log("SID: " + SID + " User: " + user);
       if(!SID || (SID && user)){
@@ -423,6 +522,7 @@ app.use("/likeComment", async (req, res) => {
   if(user && comment && SID && thread) {
     let verified = await sessions.verify(con, SID, user);
     if(verified === true){
+      db.logAction(con, req.body.username, "likeComment", comment, req.ip);
       let liked = await db.isCommentLiked(con, comment, user);
       db.loggedIn(con, user);
       if(liked){
@@ -457,6 +557,7 @@ app.use("/updateBio", async (req, res) => {
   if(bio && SID && user) {
     let verified = await sessions.verify(con, SID, user);
     if(verified === true){
+      db.logAction(con, req.body.username, "updateBio", user, req.ip);
       db.updateBio(con, bio, user);
       res.sendStatus(200);
     }
@@ -479,6 +580,7 @@ app.use("/updateUsername", async (req, res) => {
   if(newName && SID && user) {
     let verified = await sessions.verify(con, SID, user);
     if(verified === true){
+      db.logAction(con, newName, "updateUsername", user, req.ip);
       db.updateUsername(con, newName, user);
       res.sendStatus(200);
     }
@@ -503,6 +605,7 @@ app.use("/updateDisplayName", async (req, res) => {
     if(newName && SID && user) {
       let verified = await sessions.verify(con, SID, user);
       if(verified === true){
+        db.logAction(con, req.body.username, "updateDisplayName", '', req.ip);
         db.updateDisplayName(con, newName, user, hexCode);
         let d = await db.getUserData(con, req.body.username);
         res.send(d);
@@ -533,6 +636,7 @@ app.use("/updatePfp", uploadPfp.single('image'), async (req, res) => {
     if(SID && user) {
       let verified = await sessions.verify(con, SID, user);
       if(verified === true){
+        db.logAction(con, req.body.username, "updatePfp", file, req.ip);
         db.updatePfp(con, file, user);
         res.sendStatus(200);
       }

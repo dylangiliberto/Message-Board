@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import '../../App.css'
+import {
+    BrowserRouter as Router,
+    Link
+  } from "react-router-dom";
 
 export default function Account({ sessionData, setSessionData }) {
 
@@ -153,6 +157,7 @@ export default function Account({ sessionData, setSessionData }) {
         return(
             <div className="Page">
                 <h2>Administrator Controls</h2>
+                <Link to='/admin/viewlogs' style={{textDecoration: 'none'}}>View Server Logs</Link>
                 <h3>Manager Role Permissions</h3>
                 {permDisplayTable ? permDisplayTable : ""}
                 <form onSubmit={e => {postPermTable(e); console.log(permTable)}}>

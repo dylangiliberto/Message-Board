@@ -82,6 +82,21 @@ function getSession(con, SID) {
     });
 }
 
+function isLocked(con, username) {
+    let sql = "SELECT `locked` from `users` WHERE `username` = ?";
+    return new Promise(function(resolve, reject) {
+        con.query(sql, [username], function (err, result) {
+            if (err) {
+                resolve("");
+            }
+            if(result[0])
+                resolve(result[0].locked);
+            else
+                resolve("");
+        });
+    });
+}
+
 function getUserSessions(con, username) {
     let sql = "SELECT * from `sessions` WHERE `username` = \"" + username +"\"";
     return new Promise(function(resolve, reject) {
@@ -144,9 +159,36 @@ function getUserData(con, username) {
     });
 }
 
+function getPublicUserData(con, username) {
+    let sql = "SELECT `username`,`imageURL`,`displayName`,`displayNameHex`,`user_bio`,`date_created`,`date_last_logged_in` FROM users WHERE username = ?;";
+
+    return new Promise(function(resolve, reject) {
+        con.query(sql, [username], function (err, result) {
+            if (err) {
+                return reject(err);
+            }
+            if(result[0]){
+                resolve(result[0]);
+            }
+                
+            else
+                resolve("No Such User");
+        });
+    });
+}
+
 function loggedIn(con, username) {
     let sql = "UPDATE `users` SET `date_last_logged_in` = CURRENT_TIMESTAMP WHERE `username` = ? LIMIT 1";
     con.query(sql, [username]);
+}
+
+function lockAccount(con, username) {
+    let sql = "UPDATE `users` SET `locked` = ? WHERE `username` = ? LIMIT 1";
+    con.query(sql, [1, username]);
+}
+function unlockAccount(con, username) {
+    let sql = "UPDATE `users` SET `locked` = ? WHERE `username` = ? LIMIT 1";
+    con.query(sql, [0, username]);
 }
 
 function isCommentAuthor(con, comment, username) {
@@ -458,6 +500,28 @@ function assignRole(con, username, roleID) {
     con.query(sql, [username, roleID]);
 }
 
+function setPassword(con, username, newPassword) {
+    let sql = "UPDATE `MessageBoard`.`users` SET `password` = ? WHERE (`username` = ?)";
+    con.query(sql, [newPassword, username]);
+}
+
+function logAction(con, username, action, action_id, ip) {
+    let sql = "INSERT INTO `MessageBoard`.`logs` (`username`, `action`, `action_item_id`, `ip_address`) VALUES (?,?,?,?)";
+    con.query(sql, [username, action, action_id, ip]);
+}
+
+function getLogs(con, num, offset) {
+    let sql = "SELECT * FROM `logs` ORDER BY `ID` DESC LIMIT ?";
+    return new Promise(function(resolve, reject) {
+        con.query(sql, [num], function(error, result) {
+            if(error) {
+                reject();
+            }
+            resolve(result);
+        });
+    });
+}
+
 async function assignRoles(con, username, roles) { //Given an array of [int roleID, bool assigned], assigns users roles
     let sql;
     let exists;
@@ -544,4 +608,4 @@ module.exports = { getConnection, getVersion, getUserData, createUser, doesSIDEx
     createSession, destroySession, postComment, getComments, isCommentLiked, likeComment, unlikeComment, getThreadData, deleteComment, deleteCommentPerm,
     loggedIn, createThread, lockThread, deleteThread, archiveThread, updateBio, updatePfp, updateUsername, updateDisplayName, isAdministrator,
     getTopTwoReplies, isCommentAuthor, getRolesList, getPermissionsList, getRolesPermissionsList, setPermission, addRole, assignRole, assignRoles, getUserRoles,
-    getUserPermissions, getUsersHighestRole, userHasPermission, countThreads };
+    getUserPermissions, getUsersHighestRole, userHasPermission, countThreads, isLocked, getPublicUserData, lockAccount, unlockAccount, setPassword, logAction, getLogs };

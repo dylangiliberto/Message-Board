@@ -182,12 +182,12 @@ export default function Home({ sessionData }) {
       <table style={{width: '100%'}}><tbody>
         <tr key={"space"}>
           <td>
-            <h1>Spaces </h1>
+            <h1>Threads</h1>
           </td>
           <td>
             <div className='tooltip' style={{float: 'right'}}>
               <span className='tooltipcontents'>
-                New Space
+                New Thread
               </span>
               <Link to='/newThread' style={{textDecoration: 'none'}}>
                 <h1>

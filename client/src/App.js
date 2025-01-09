@@ -11,12 +11,12 @@ import ErrorPage from './components/ErrorPage';
 import Root from './components/root';
 import Logout from './components/Account/Logout';
 import SignUp from './components/SignUp';
-import UserAccount from './components/UserAccounts/UserAccount';
+import UserAccount from './components/Profiles/UserAccount';
 import Footer from './components/Footer';
 import NewThread from './components/NewThread';
-import ArchivedThreads from './components/ArchivedThreads';
 import Post from './components/Post';
-import Admin from './components/Account/Admin';
+import Admin from './components/Admin/Admin';
+import ViewLogs from './components/Admin/ViewLogs';
 import NotFound from './components/NotFound';
 import {
   BrowserRouter as Router,
@@ -68,6 +68,7 @@ function App() {
           <Route path={"/login"} element={<Login sessionData={sessionData} setSessionData={setSessionData} />} />
           <Route path={"/Account"} element={<Account sessionData={sessionData} setSessionData={setSessionData} />} />
           <Route path={"/admin"} element={<Admin sessionData={sessionData} setSessionData={setSessionData} />} />
+          <Route path={"/admin/viewlogs"} element={<ViewLogs sessionData={sessionData} setSessionData={setSessionData} />} />
           <Route path={"/logout"} element={<Logout sessionData={sessionData} setSessionData={setSessionData}/>} />
           <Route path={"/forbidden"} element={<Logout sessionData={sessionData} setSessionData={setSessionData} forbidden={true}/>} />
           <Route path={"/user/:username"} element={<UserAccount sessionData={sessionData} setSessionData={setSessionData}/>} />

@@ -18,9 +18,12 @@ async function registerSID(con, SID, user) {
 
 async function verify(con, SID, username) {
     let session = await db.getSession(con, SID);
+    let locked = await db.isLocked(con, username);
+    console.log(username + " Locked? ");
+    console.log(locked);
     console.log("VERIFYING: " + SID + " with " + session.ID);
     //console.log(session);
-    if(SID && username && session.ID === SID && session.username === username){
+    if(SID && username && session.ID === SID && session.username === username && locked === 0){
         console.log("VERIFIED");
         destroyDuplicateSessions(con, username, SID);
         return true;
