@@ -9,6 +9,8 @@ const cors = require('cors');
 
 const db = require('./database');
 const sessions = require('./sessions');
+const mail = require('./mail');
+
 
 const bcrypt = require('bcrypt');
 
@@ -17,20 +19,24 @@ const upload = multer({ dest: 'images/' });
 const uploadPfp = multer({ dest: 'pfp/' });
 const PORT = process.env.PORT || 3001;
 
-httpModule.createServer(app).listen(PORT, () => {
+httpModule.createServer(app).listen(PORT, () => { //Start Express Server
   console.log(`HTTP  NodeJS Server listening on port ${PORT}`);
 });
 
-let con = db.getConnection();
+let con = db.getConnection(); //Start MySQL Connection
 db.logAction(con, "SERVER", "Started API", "", "0.0.0.0");
+
+const nodemailer = require("nodemailer"); //Start Nodemailer service
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.enable('trust proxy');
 
-app.get('/', (req,res)=>{
-  res.send("Hello from express server.")
+app.get('/', async (req,res)=>{
+  //sessions.initiatePasswordReset(con, nodemailer, "Dylang140", "dylangiliberto@gmail.com");
+  //mail.sendMail(nodemailer, "dylangiliberto@gmail.com", "Pasword Reset Request", "<h1>Heading</h1><b>hello to me</b>")
+  res.send("Hello from express server.");
 })
 
 app.get("/status", async (req, res) => {
@@ -58,7 +64,7 @@ app.use("/user", async (req, res) => {
 
 app.use("/userPublic", async (req, res) => {
   console.log("userPublic - " + (req?.body?.username ? req?.body?.username : " No User"));
-  db.logAction(con, "", "userPublic", req?.body?.username,req.ip);
+  db.logAction(con, "", "userPublic", req?.body?.username, req.header('X-Real-IP'));
   let d = await db.getPublicUserData(con, req.body.username);
   //console.log(d);
   res.send({
@@ -69,10 +75,10 @@ app.use("/userPublic", async (req, res) => {
 app.use("/logs", async (req, res) => {
   let user = req?.body?.username;
   console.log("logs - " + (req?.body?.username ? req?.body?.username : " No User"));
-  db.logAction(con, user, "logs", "",req.ip);
+  db.logAction(con, user, "logs", "", req.header('X-Real-IP'));
   let verified = await sessions.verify(con, req.body.SID, user);
   let isAdmin = await db.isAdministrator(con, user);
-  if(verified && isAdmin === 1){
+  if(verified && isAdmin){
     let d = await db.getLogs(con, req.body.requestNum, req.body.offsetNum);
     res.send({
       user: d
@@ -101,7 +107,7 @@ app.use("/lockAccount", async (req, res) => {
   let verified = await sessions.verify(con, req.body.SID, req.body.username);
   let isAdmin = await db.isAdministrator(con, req.body.username);
   if(verified && isAdmin) {
-    db.logAction(con, req.body.username, "lockAccount", req?.body?.targetUsername, req.ip);
+    db.logAction(con, req.body.username, "lockAccount", req?.body?.targetUsername, req.header('X-Real-IP'));
     db.lockAccount(con, req.body.targetUsername);
     res.sendStatus(200);
   }
@@ -111,7 +117,7 @@ app.use("/unlockAccount", async (req, res) => {
   console.log("Locking Account: " + (req?.body?.targetUsername ? req?.body?.targetUsername : " No User"));
   let verified = await sessions.verify(con, req.body.SID, req.body.username);
   let isAdmin = await db.isAdministrator(con, req.body.username);
-  db.logAction(con, req.body.username, "unlockAccount", req?.body?.targetUsername, req.ip);
+  db.logAction(con, req.body.username, "unlockAccount", req?.body?.targetUsername, req.header('X-Real-IP'));
   if(verified && isAdmin) {
     db.unlockAccount(con, req.body.targetUsername);
     res.sendStatus(200);
@@ -141,7 +147,7 @@ app.use("/setPassword", async (req, res) => { //Change password for 'targetUsern
   if(verified && isAdmin === 1) {
     bcrypt.hash(newPassword, 10, function(err, hash) {
       if(!err) {
-        db.logAction(con, req.body.username, "setPassword", target, req.ip);
+        db.logAction(con, req.body.username, "setPassword", target, req.header('X-Real-IP'));
         db.setPassword(con, target, hash);
         console.log("Set Password for " + target);
         res.sendStatus(200);
@@ -166,7 +172,7 @@ app.use("/register", async (req, res) => {
   if(!taken) {
     bcrypt.hash(password, 10, function(err, hash) {
       if(!err) {
-        db.logAction(con, username, "register", username, req.ip);
+        db.logAction(con, username, "register", username, req.header('X-Real-IP'));
         db.createUser(con, username, hash, email);
         db.assignRole(con, username, 1); //Assign default 'User' role to new users
         console.log("Registered User " + username);
@@ -184,6 +190,68 @@ app.use("/register", async (req, res) => {
   }
 });
 
+app.use("/forgotpassword", async (req, res) => {
+  let username = req.body.username;
+  let taken = await db.doesUserExist(con, username);
+  if(username && taken) {
+    let recent = await sessions.recentRequest(con, username);
+    if(recent == 0) {
+      db.logAction(con, username, "Initiate Password Reset: Success", req.header('X-Real-IP'));
+      let email = await db.getUserData(con, username);
+      console.log(email.email);
+      sessions.initiatePasswordReset(con, nodemailer, username, email.email);
+      res.sendStatus(200);
+    }
+    else {
+      db.logAction(con, username, "Initiate Password Reset: Fail (Attempts)", req.header('X-Real-IP'))
+      res.statusMessage = "Reset already attempted in last 15 minutes";
+      res.sendStatus(403);
+    }
+  }
+  else {
+    db.logAction(con, "", "Initiate Password Reset: Fail (Other)", req.header('X-Real-IP'))
+    console.log("Did Not Initiate Reset Password");
+    res.sendStatus(500);
+  }
+});
+
+app.use("/resetpassword", async (req, res) => {
+  let username = req.body.username;
+  let password = req.body.password;
+  let code = req.body.resetcode;
+
+  if(username && password?.length >= 8 && code) {
+    let data = await sessions.getResetRequest(con, username);
+    console.log(data);
+    if(data[0]?.username == username) {
+      if(new Date(data[0]?.date_expiry) >= Date.now()){
+        db.logAction(con, username, "Password Reset: Success", req.header('X-Real-IP'));
+        console.log("Password Reset for " + username + ": Success");
+        bcrypt.hash(password, 10, function(err, hash) {
+          db.setPassword(con, username, hash);
+        });
+        sessions.purgeRequests(con, code);
+        res.sendStatus(200);
+      }
+      else {
+        res.statusMessage = "Request Expired";
+        res.sendStatus(403);
+      }
+    }
+    else {
+      db.logAction(con, username, "Password Reset: Fail", req.header('X-Real-IP'))
+      console.log("Password Reset: Fail");
+      res.statusMessage = "Something went wrong, please try again";
+      res.sendStatus(403);
+    }
+  }
+  else {
+    db.logAction(con, "", "Password Reset: Fail (Other)", req.header('X-Real-IP'))
+    console.log("Did Not Reset Password");
+    res.sendStatus(500);
+  }
+});
+
 app.use("/postComment", upload.single('image'), async (req, res) => {
   let user = req.body.username;
   let SID = req.body.SID;
@@ -194,7 +262,7 @@ app.use("/postComment", upload.single('image'), async (req, res) => {
     //console.log("File Path: " + file);
     //console.log("Verified?: " + verified);
     if(verified === true && user && (req.body.comment || file) && thread){
-      db.logAction(con, user, "postComment", thread, req.ip);
+      db.logAction(con, user, "postComment", thread, req.header('X-Real-IP'));
       console.log("postComment - " + (req?.body?.username ? req?.body?.username : " No User") + file);
       db.postComment(con, req.body.comment, thread, user, file);
         //const imagePath = req.file.path;
@@ -238,7 +306,7 @@ app.use("/deleteComment", async (req, res) => {
   let admin = await db.isAdministrator(con, user);
   
   if(comment && user && SID && thread && verified && (author || admin)){
-    db.logAction(con, req.body.username, "deleteComment", comment.ID, req.ip);
+    db.logAction(con, req.body.username, "deleteComment", comment.ID, req.header('X-Real-IP'));
     console.log("Deleteing/Restoring Comment ID: " + comment.ID + " User: " + user + " SID: " + SID + "SetDeleted: " + setDeleted);
     db.deleteComment(con, setDeleted, comment.ID, thread);
     let comments = await db.getComments(con, thread, user, req.body.requestDeleted);
@@ -259,7 +327,7 @@ app.use("/deleteCommentPerm", async (req, res) => {
   let admin = await db.isAdministrator(con, user);
 
   if(comment && user && SID && thread && verified && admin){
-    db.logAction(con, req.body.username, "deleteCommentPerm", comment, req.ip);
+    db.logAction(con, req.body.username, "deleteCommentPerm", comment, req.header('X-Real-IP'));
     console.log("Permanently Deleteing Comment ID: " + comment + " User: " + user + " SID: " + SID);
     db.deleteCommentPerm(con, comment, thread);
     let comments = await db.getComments(con, thread, user, req.body.requestDeleted);
@@ -279,7 +347,7 @@ app.use("/login", async (req, res) => {
     });
     if(user.username === req.body.username) {
       if(user.locked === 0){
-        db.logAction(con, req.body.username, "login", "", req.ip);
+        db.logAction(con, req.body.username, "login", "", req.header('X-Real-IP'));
         let token = await sessions.generateSID(con);
         let perms = await db.getUserPermissions(con, req.body.username);
         let pass = req.body.password;
@@ -323,12 +391,47 @@ app.use("/login", async (req, res) => {
   }
 });
 
+app.use("/logAdminOtherUser", async (req, res) => {
+  if(req.body.username && req.body.SID){
+    let verified = await sessions.verify(con, req.body.SID, req.body.username) || false;
+    let isAdmin = await db.isAdministrator(con, req.body.username);
+    console.log("login admin as user - " + req?.body?.username + " as " + req?.body?.targetUsername);
+    let user = await db.getUserData(con, req.body.targetUsername).then(function(rows) {
+      return rows;
+    });
+    if(user.username === req.body.targetUsername && verified && isAdmin) {
+      db.logAction(con, req.body.username, "login admin as user", req?.body?.targetUsername, req.header('X-Real-IP'));
+      let token = await sessions.generateSID(con);
+      let perms = await db.getUserPermissions(con, req.body.username);
+
+      
+      if(verified) {
+        console.log("User " + req.body.username + " logged in as " + req?.body?.targetUsername);
+        sessions.registerSID(con, token, req.body.targetUsername);
+        res.send({
+          user: user,
+          permissions: perms,
+          token: token
+        });
+      }
+    }
+    else {
+      res.statusMessage = 'User Not Found';
+      res.sendStatus(403);
+    }
+  }
+  else {
+    res.statusMessage = 'Missing Username or Password';
+    res.sendStatus(403);
+  }
+});
+
 app.use("/logout", async (req, res) => {
   let SID = req.body.token;
   console.log("logout - " + SID);
   //console.log(req.body);
   if(SID){
-    db.logAction(con, req.body.username, "logout", '', req.ip);
+    db.logAction(con, req.body.username, "logout", '', req.header('X-Real-IP'));
     db.destroySession(con, SID);
   }
 });
@@ -350,7 +453,7 @@ app.use("/threads", async (req, res) => {
         "WHERE `archived` = 0 AND `deleted` = 0 ORDER BY `pinned` DESC, `last_activity` DESC";
   }
   console.log("threads - " + (req?.body?.username ? req?.body?.username : " No User"));
-  db.logAction(con, req.body.username, "threads", '', req.ip);
+  db.logAction(con, req.body.username, "threads", '', req.header('X-Real-IP'));
   con.query(sql, function (err, result, fields) {
     if (err) throw err;
     res.send({
@@ -380,7 +483,7 @@ app.use("/threadsPage", async (req, res) => {
         "WHERE `archived` = 0 AND `deleted` = 0 ORDER BY `pinned` DESC, `last_activity` DESC LIMIT ? OFFSET ?";
         threadsCount = await db.countThreads(con, false);
   }
-  db.logAction(con, req.body.username, "threadsPage", '', req.ip);
+  db.logAction(con, req.body.username, "threadsPage", '', req.header('X-Real-IP'));
   console.log("threadsPage - " + (req?.body?.username ? req?.body?.username : " No User"));
   con.query(sql, [requestNum, requestStart],function (err, result, fields) {
     if (err) throw err;
@@ -424,7 +527,7 @@ app.use("/newThread", async (req, res) => {
   console.log("Creating Thread: " + title);
   let verified = await sessions.verify(con, SID, username);
   if(verified) {
-    db.logAction(con, req.body.username, "newThread", title, req.ip);
+    db.logAction(con, req.body.username, "newThread", title, req.header('X-Real-IP'));
     db.createThread(con, title, desc, username);
     db.loggedIn(con, username);
     res.sendStatus(200);
@@ -446,7 +549,7 @@ app.use("/updateThread", async (req, res) => {
   console.log(setDeleted === 1 ? "Deleting Thread..." : "Restoring Thread...");
   let verified = await sessions.verify(con, SID, username);
   if(verified) {
-    db.logAction(con, req.body.username, "updateThread", thread, req.ip);
+    db.logAction(con, req.body.username, "updateThread", thread, req.header('X-Real-IP'));
     db.lockThread(con, thread, (setLocked ? 1 : 0));
     db.deleteThread(con, thread, (setDeleted ? 1 : 0));
     db.archiveThread(con, thread, (setArchived ? 1 : 0));
@@ -471,7 +574,7 @@ app.use("/comments", async (req, res) => {
       if(req?.body?.requestDeleted && user && isAdmin) {
         sendDeleted = true;
       }
-      db.logAction(con, req.body.username, "comments", threadID, req.ip);
+      db.logAction(con, req.body.username, "comments", threadID, req.header('X-Real-IP'));
       console.log("/comments called");
       console.log("SID: " + SID + " User: " + user);
       if(!SID || (SID && user)){
@@ -522,7 +625,7 @@ app.use("/likeComment", async (req, res) => {
   if(user && comment && SID && thread) {
     let verified = await sessions.verify(con, SID, user);
     if(verified === true){
-      db.logAction(con, req.body.username, "likeComment", comment, req.ip);
+      db.logAction(con, req.body.username, "likeComment", comment, req.header('X-Real-IP'));
       let liked = await db.isCommentLiked(con, comment, user);
       db.loggedIn(con, user);
       if(liked){
@@ -557,7 +660,7 @@ app.use("/updateBio", async (req, res) => {
   if(bio && SID && user) {
     let verified = await sessions.verify(con, SID, user);
     if(verified === true){
-      db.logAction(con, req.body.username, "updateBio", user, req.ip);
+      db.logAction(con, req.body.username, "updateBio", user, req.header('X-Real-IP'));
       db.updateBio(con, bio, user);
       res.sendStatus(200);
     }
@@ -580,7 +683,7 @@ app.use("/updateUsername", async (req, res) => {
   if(newName && SID && user) {
     let verified = await sessions.verify(con, SID, user);
     if(verified === true){
-      db.logAction(con, newName, "updateUsername", user, req.ip);
+      db.logAction(con, newName, "updateUsername", user, req.header('X-Real-IP'));
       db.updateUsername(con, newName, user);
       res.sendStatus(200);
     }
@@ -605,7 +708,7 @@ app.use("/updateDisplayName", async (req, res) => {
     if(newName && SID && user) {
       let verified = await sessions.verify(con, SID, user);
       if(verified === true){
-        db.logAction(con, req.body.username, "updateDisplayName", '', req.ip);
+        db.logAction(con, req.body.username, "updateDisplayName", '', req.header('X-Real-IP'));
         db.updateDisplayName(con, newName, user, hexCode);
         let d = await db.getUserData(con, req.body.username);
         res.send(d);
@@ -636,7 +739,7 @@ app.use("/updatePfp", uploadPfp.single('image'), async (req, res) => {
     if(SID && user) {
       let verified = await sessions.verify(con, SID, user);
       if(verified === true){
-        db.logAction(con, req.body.username, "updatePfp", file, req.ip);
+        db.logAction(con, req.body.username, "updatePfp", file, req.header('X-Real-IP'));
         db.updatePfp(con, file, user);
         res.sendStatus(200);
       }

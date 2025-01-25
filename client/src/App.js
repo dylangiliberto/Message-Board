@@ -18,6 +18,9 @@ import Post from './components/Post';
 import Admin from './components/Admin/Admin';
 import ViewLogs from './components/Admin/ViewLogs';
 import NotFound from './components/NotFound';
+import ForgotPassword from './components/Account/ForgotPassword';
+import ResetPassword from './components/Account/ResetPassword';
+
 import {
   BrowserRouter as Router,
   Route,
@@ -73,6 +76,10 @@ function App() {
           <Route path={"/forbidden"} element={<Logout sessionData={sessionData} setSessionData={setSessionData} forbidden={true}/>} />
           <Route path={"/user/:username"} element={<UserAccount sessionData={sessionData} setSessionData={setSessionData}/>} />
           <Route path={"/newthread"} element={<NewThread sessionData={sessionData} setSessionData={setSessionData} />} />
+          <Route path={"/forgotpassword"} element={<ForgotPassword sessionData={sessionData} setSessionData={setSessionData} />} />
+          <Route path="/passwordreset">
+            <Route path=":resetcode" element={<ResetPassword sessionData={sessionData} />} />
+          </Route>
           <Route path="/space">
             <Route path=":threadID" element={<Thread sessionData={sessionData} />} />
           </Route>
@@ -81,11 +88,12 @@ function App() {
           </Route>
           <Route path={"/*"} element={<NotFound/>} />
         </Routes>
-        <Footer server={server} siteVersion={siteVersion}/>
+        
       </Router>
     </div>
   );
   //<Route path={"/archived"} element={<ArchivedThreads sessionData={sessionData} />} />
+  //<Footer server={server} siteVersion={siteVersion}/>
 }
 
 export default App;

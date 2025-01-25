@@ -42,6 +42,21 @@ function doesSIDExist(con, SID) {
     });
 }
 
+function doesPwdKeyExist(con, key) {
+    let sql = "SELECT * from `password_resets` WHERE `reset_code` = \"" + key +"\"";
+    return new Promise(function(resolve, reject) {
+        con.query(sql, function (err, result) {
+            if (err) {
+                return reject(err);
+            }
+            if(result[0])
+                resolve(true);
+            else
+                resolve(false);
+        });
+    });
+}
+
 function doesUserExist(con, user) {
     let sql = "SELECT * FROM `users` WHERE `username` = ?";
     return new Promise(function(resolve, reject) {
@@ -186,6 +201,7 @@ function lockAccount(con, username) {
     let sql = "UPDATE `users` SET `locked` = ? WHERE `username` = ? LIMIT 1";
     con.query(sql, [1, username]);
 }
+
 function unlockAccount(con, username) {
     let sql = "UPDATE `users` SET `locked` = ? WHERE `username` = ? LIMIT 1";
     con.query(sql, [0, username]);
@@ -425,7 +441,7 @@ function isAdministrator(con, username) {
             con.query(sql, [username], function (err, result) {
                 if(err)
                     return reject(err);
-                resolve(result[0].administrator);
+                resolve(result[0].administrator === 1 ? true : false);
             }
         )});
     }
@@ -608,4 +624,4 @@ module.exports = { getConnection, getVersion, getUserData, createUser, doesSIDEx
     createSession, destroySession, postComment, getComments, isCommentLiked, likeComment, unlikeComment, getThreadData, deleteComment, deleteCommentPerm,
     loggedIn, createThread, lockThread, deleteThread, archiveThread, updateBio, updatePfp, updateUsername, updateDisplayName, isAdministrator,
     getTopTwoReplies, isCommentAuthor, getRolesList, getPermissionsList, getRolesPermissionsList, setPermission, addRole, assignRole, assignRoles, getUserRoles,
-    getUserPermissions, getUsersHighestRole, userHasPermission, countThreads, isLocked, getPublicUserData, lockAccount, unlockAccount, setPassword, logAction, getLogs };
+    getUserPermissions, getUsersHighestRole, userHasPermission, countThreads, isLocked, getPublicUserData, lockAccount, unlockAccount, setPassword, logAction, getLogs, doesPwdKeyExist };

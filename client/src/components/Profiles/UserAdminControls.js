@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import '../../App.css';
+import {
+    Navigate,
+    useLocation
+  } from "react-router-dom";
 
 export default function UserAdminControls({ sessionData, setSessionData, username }) {
     const [data, setData] = useState();
     const [locked, setLocked] = useState();
     const [newPass, setNewPass] = useState();
+    const [redirect, setRedirect] = useState(false);
     const [passSuccess, setPassSuccess] = useState();
 
     useEffect(() => {
@@ -64,9 +69,30 @@ export default function UserAdminControls({ sessionData, setSessionData, usernam
                     targetUsername: data.username,
                     password: newPass})
         });
-        
         if(c.ok){
             setPassSuccess(true);
+        }
+    }
+    const handleLogMeIn = async e => {
+        e.preventDefault();
+        
+        let url = "https://api.board.dylang140.com/logAdminOtherUser";
+        let c = await fetch(url, {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(
+                {username: sessionData.user.username, 
+                    SID: sessionData.token, 
+                    targetUsername: data.username
+                })
+        });
+        if(c.ok) {
+            let result = await c.json();
+            console.log(result);
+            setSessionData(result);
+            setRedirect(true);
         }
     }
 
@@ -83,12 +109,18 @@ export default function UserAdminControls({ sessionData, setSessionData, usernam
             {passSuccess === true ? "Success!" : ""}
         </form>
     );
+    let logMeIn = (
+        <form onSubmit={handleLogMeIn}>
+            <input type="submit" className = "Button" value={"Log In as User"}/>
+        </form>
+    );
 
-    if(data?.locked != null) {
+    if(data?.locked != null && redirect == false) {
         return (
             <div>
                 <h2>Admin Controls</h2>
                 {lockButton}
+                {logMeIn}
                 {passwordChange}
                 <table>
                     <tr>
@@ -106,6 +138,9 @@ export default function UserAdminControls({ sessionData, setSessionData, usernam
                 </table>       
             </div>
         );
+    }
+    else if(redirect == true) {
+        return <Navigate to='/' />;
     }
     else {
         return <div></div>;

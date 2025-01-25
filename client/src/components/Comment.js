@@ -8,8 +8,8 @@ import {
     Link,
     Redirect
 } from "react-router-dom";
-import TopReplies from './Replies/TopReplies';
-import Post from './Post';
+//import TopReplies from './Replies/TopReplies';
+//import Post from './Post';
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 

@@ -65,6 +65,8 @@ export default function Login({ sessionData, setSessionData, redirectTo}) {
             <button className="Button" type="submit">Submit</button>
           </div>
         </form>
+        <br/>
+        <a href="/forgotpassword">Forgot Password</a>
       </div>
     )
   }
