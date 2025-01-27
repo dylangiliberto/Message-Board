@@ -92,7 +92,7 @@ async function recentRequest(con, username) {
 async function initiatePasswordReset(con, mailer, username, email) {
     let sql = "INSERT INTO `password_resets` (`username`, `date_expiry`, `reset_code`, `email`) VALUES (?, ?, ?, ?)";
     let key = await generateKey(con);
-    let link = " <a href='board.dylang140.com/passwordreset/" + key + "'>Reset Password</a></b>";
+    let link = " <a href='board.dylang140.com/passwordreset/" + key + "'>Reset Password</a><b/>";
     con.query(sql, [username, (new Date(Date.now() + 3600000)).toISOString().slice(0, 19).replace('T', ' '), key, email], function (err, result) {
         if (err) {
             console.log(err);
@@ -103,7 +103,7 @@ async function initiatePasswordReset(con, mailer, username, email) {
         username + 
         ".</h3> If you did not request this, ignore this email. Otherwise, use this link to reset your password: \n " +
         link +
-        "</b>This link will expire in 1 hour"
+        "<b/>This link will expire in 1 hour"
     );
 }
 
