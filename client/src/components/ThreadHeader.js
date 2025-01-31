@@ -12,10 +12,12 @@ import Resizer from "react-image-file-resizer";
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-export default function ThreadHeader({ sessionData, threadData, setComments, setForbidden}) {
+export default function ThreadHeader({ sessionData, threadData, setComments }) {
     let [comment, setComment] = useState();
     let [file, setFile] = useState();
     let [tooLarge, setTooLarge] = useState(false);
+    let [forbidden, setForbidden] = useState();
+    let [unauth, setUnauth] = useState();
 
     let date = new Date(threadData['date_created']);
     let dateFormatted = months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
@@ -42,6 +44,9 @@ export default function ThreadHeader({ sessionData, threadData, setComments, set
           console.log(file);
           if(c.status === 403) {
             setForbidden(true);
+          }
+          else if(c.status === 401) {
+            setUnauth(true);
           }
           else if(c.ok) {
             setComment("");
@@ -113,7 +118,12 @@ export default function ThreadHeader({ sessionData, threadData, setComments, set
     let deletedMsg = (
       <label style={{"color": "red"}}><i>This Thread Is Deleted</i></label>
     );
-
+    if(unauth) {
+      return <Navigate replace to="/logout" />
+    }
+    else if(forbidden) {
+      return <Navigate replace to="/forbidden" />
+    }
     return ( //Header
         <div className="Page">
             <h1>{threadData ? threadData['title'] : "loading"}</h1>

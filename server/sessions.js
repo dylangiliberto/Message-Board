@@ -2,6 +2,8 @@ const db = require('./database');
 var crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const mail = require('./mail');
+const perms = require('./rolesPermissions');
+
 
 async function generateSID(con){
     let SID = crypto.randomBytes(16).toString('base64');
@@ -50,21 +52,24 @@ async function purgeRequests(con, code) {
     }); 
 }
 
-async function verify(con, SID, username) {
+async function verify(con, SID, username, permission) {
     let session = await db.getSession(con, SID);
     let locked = await db.isLocked(con, username);
-    console.log(username + " Locked? ");
-    console.log(locked);
     console.log("VERIFYING: " + SID + " with " + session.ID);
     //console.log(session);
     if(SID && username && session.ID === SID && session.username === username && locked === 0){
-        console.log("VERIFIED");
+        
         destroyDuplicateSessions(con, username, SID);
-        return true;
+        if(permission ? await perms.checkUserPerm(con, username, permission) : true) { //If permission specified in paramaters, verify permission, otherwise true (proceed to regular verification)
+            console.log("VERIFIED");
+            return [true, true]; //[Verified perm, verified user]
+        }
+        console.log("VERIFIED, no permission");
+        return [false, true]; //[Verified perm, verified user]
     }
     else {
         console.log("NOT VERIFIED");
-        return false;
+        return [false, false]; //[Verified perm, verified user]
     }
 }
 
@@ -103,7 +108,7 @@ async function initiatePasswordReset(con, mailer, username, email) {
         username + 
         ".</h3> If you did not request this, ignore this email. Otherwise, use this link to reset your password: \n " +
         link +
-        "<b/>This link will expire in 1 hour"
+        "<p><p/>This link will expire in 1 hour"
     );
 }
 

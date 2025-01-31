@@ -13,6 +13,8 @@ export default function NewThread({ sessionData, setSessionData }) {
     let [desc, setDesc] = useState();
     let [success, setSuccess] = useState();
     let [forbidden, setForbidden] = useState();
+    let [unauth, setUnauth] = useState();
+
     let err = "No Error";
 
     const handleSubmit = async e => {
@@ -30,13 +32,20 @@ export default function NewThread({ sessionData, setSessionData }) {
             if(c.ok) {
                 setSuccess(true);
             }
-            else if(c.status === 403) {
+            else if(c.status === 403) { //Forbidden
                 setForbidden(true);
+            }
+            else if(c.status === 401) { //Unauthorized 
+                setUnauth(true);
             }
         }
     }
+
     if(forbidden) {
         return <Navigate replace to="/forbidden" />
+    }
+    else if(unauth) {
+        return <Navigate replace to="/logout" />
     }
     else if(success) {
         return <Navigate replace to="/" />  

@@ -3,7 +3,6 @@ import {
     useParams,
   } from "react-router-dom";
 import '../../App.css';
-import UserRolesForm from './UserRolesForm';
 import UserAdminControls from './UserAdminControls';
 
 
@@ -83,8 +82,6 @@ export default function UserAccount({ sessionData, setSessionData }) {
                 {dateLogged}
                 <h2>Administrator</h2>
                 {data.administrator ? "Yes" : "No"}
-                <br/>
-                <UserRolesForm sessionData={sessionData} setSessionData={setSessionData} username={data.username}/>
                 <br/><br/>
                 <UserAdminControls sessionData={sessionData} setSessionData={setSessionData} username={data.username}/>
 

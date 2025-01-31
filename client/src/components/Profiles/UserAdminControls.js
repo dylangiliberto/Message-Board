@@ -11,13 +11,13 @@ export default function UserAdminControls({ sessionData, setSessionData, usernam
     const [newPass, setNewPass] = useState();
     const [redirect, setRedirect] = useState(false);
     const [passSuccess, setPassSuccess] = useState();
+    const [userRoles, setUserRoles] = useState();
 
     useEffect(() => {
-        const url = "https://api.board.dylang140.com/userAdmin";
+        let url = "https://api.board.dylang140.com/userAdmin";
         let sendData = {username: sessionData?.user?.username,
             SID: sessionData?.token, targetUsername: username};
-
-        const fetchData = async () => {
+        let fetchData = async () => {
             try {
                 const response = await fetch(url, {
                     method: 'POST',
@@ -34,9 +34,55 @@ export default function UserAdminControls({ sessionData, setSessionData, usernam
                 console.log("error", error);
             }
         };
-
         fetchData();
+        fetchRoles();
+        
     }, [sessionData, username]);
+
+    const fetchRoles = async e => {
+        let url = "https://api.board.dylang140.com/getUserRolesTruthTable";
+        let sendData = {username: sessionData?.user?.username,
+            SID: sessionData?.token, targetUsername: username};
+        let fetchData = async () => {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(sendData)
+                    })
+                const json = await response.json();
+                console.log(json.roles)
+                setUserRoles(json.roles);
+            } catch (error) {
+                console.log("error", error);
+            }
+        };
+        fetchData();
+    };
+
+    function updateRoles(roleID, value) {
+        let url = "https://api.board.dylang140.com/setUserRole";
+        let sendData = {username: sessionData?.user?.username,
+            SID: sessionData?.token, targetUsername: username, roleID: roleID, value: value};
+        let sendRoles = async () => {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(sendData)
+                    })
+                const json = await response.json();
+                setUserRoles(json.roles);
+            } catch (error) {
+                console.log("error updating roles", error);
+            }
+        };
+        sendRoles();
+    }
 
     const handleLock = async e => {
         e.preventDefault();
@@ -53,7 +99,8 @@ export default function UserAdminControls({ sessionData, setSessionData, usernam
                     targetUsername: data.username})
         });
         setLocked(locked === 1 ? 0 : 1);
-    }
+    };
+
     const handlePasswordChange = async e => {
         e.preventDefault();
         
@@ -96,6 +143,39 @@ export default function UserAdminControls({ sessionData, setSessionData, usernam
         }
     }
 
+    let rolesList = (
+        <table>
+            <tr>
+                <td><b>Role ID</b></td>
+                <td><b>Name</b></td>
+                <td><b>Abreviation</b></td>
+                <td><b>Has Role</b></td>
+            </tr>
+            {userRoles ? 
+                userRoles.map((row, index) => {
+                    return (
+                        <tr key={row.roleID}>
+                            <td>{row.roleID}</td>
+                            <td>{row.roleDisplayName}</td>
+                            <td>{row.roleAbreviation}</td>
+                            <td>
+                                <form> 
+                                    <input 
+                                        type="checkbox" 
+                                        value={row.hasRole ? true : false} 
+                                        defaultChecked={row.hasRole ? true : false} 
+                                        onChange={e => {updateRoles(row.roleID, e.target.checked ? true : false)}}
+                                    />
+                                </form>
+                            </td>
+                        </tr>
+                    );
+                })
+                :
+                ""
+            }
+        </table>
+    );
 
     let lockButton = (
         <form onSubmit={handleLock}>
@@ -119,9 +199,11 @@ export default function UserAdminControls({ sessionData, setSessionData, usernam
         return (
             <div>
                 <h2>Admin Controls</h2>
+                <h3>Functions</h3>
                 {lockButton}
                 {logMeIn}
                 {passwordChange}
+                <h3>Information</h3>
                 <table>
                     <tr>
                         <td>Locked: </td>
@@ -135,7 +217,9 @@ export default function UserAdminControls({ sessionData, setSessionData, usernam
                         <td>Change Pword: </td>
                         <td>{data.force_change_password}</td>
                     </tr>
-                </table>       
+                </table> 
+                <h3>Roles</h3>
+                {rolesList}      
             </div>
         );
     }
