@@ -11,6 +11,7 @@ const db = require('./database');
 const sessions = require('./sessions');
 const mail = require('./mail');
 const perms = require('./rolesPermissions');
+const reports = require('./reports');
 
 
 const bcrypt = require('bcrypt');
@@ -113,6 +114,20 @@ app.use("/lockAccount", async (req, res) => {
     db.lockAccount(con, req.body.targetUsername);
     res.sendStatus(200);
   }
+});
+
+app.use("/report/:report", async (req, res) => {
+  console.log("Getting Report: " + req.params.report + " for user " + req.body.username);
+  let verified = sessions.verify(con, req.body.SID, req.body.user, 18); //Verify user and permission #17, generateReports
+  if(verified) {
+    let r = await reports.getReport(con, req.params.report);
+    console.log(r);
+    res.send(r);
+  }
+  else {
+    res.sendStatus(403);
+  }
+  
 });
 
 app.use("/unlockAccount", async (req, res) => {
@@ -360,48 +375,48 @@ app.use("/deleteCommentPerm", async (req, res) => {
 app.use("/login", async (req, res) => {
   if(req.body.username && req.body.password){
     console.log("login - " + (req?.body?.username ? req?.body?.username : " No User"));
-    let user = await db.getUserData(con, req.body.username).then(function(rows) {
+    let user = await db.getUserData(con, req.body.username).then(function(rows) { //Get user info from DB to compare and then send if verified
       return rows;
     });
     if(user.username === req.body.username) {
-      let permLogin = await perms.checkUserPerm(con, req.body.username, 16);
-      if(user.locked === 0 && permLogin){ //Check account not locked AND has role perm to login (16)
+      let permLogin = await perms.checkUserPerm(con, req.body.username, 16); //Check perm #16 -  login
+      if(user.locked === 0 && permLogin){ //Check account not locked AND has role perm to login (16), TODO: Un-implement lock feature, can soon be accomplished with roles
         db.logAction(con, req.body.username, "login", "", req.header('X-Real-IP'));
-        let token = await sessions.generateSID(con);
-        let permissions = await perms.getUserPerms(con, req.body.username);
+        let token = await sessions.generateSID(con); //Generate SID
+        let permissions = await perms.getUserPerms(con, req.body.username); //Get perms list to send to client (so client can not load/request features user doesn't have access to)
         let pass = req.body.password;
         let hash = user.password;
         hash = hash.replace(/^\$2y(.+)$/i, '$2a$1');
 
-        bcrypt.compare(pass, hash, function(err, v) {
+        bcrypt.compare(pass, hash, function(err, v) { //Compare entered password to stored, encrypted password
           let verified = v || false;
-          if(verified) {
+          if(verified) { //Success
             console.log("User " + req.body.username + " Logged in!");
-            sessions.registerSID(con, token, req.body.username);
-            db.loggedIn(con, req.body.username);
-            res.send({
+            sessions.registerSID(con, token, req.body.username); //Register session
+            db.loggedIn(con, req.body.username); //Update account "last seen" stat
+            res.send({ //Send data
               user: user,
               permissions: permissions,
               token: token
             });
           }
-          else {
+          else { //401 - Not authorized
             res.statusMessage = 'Incorrect Password';
-            res.sendStatus(403);
+            res.sendStatus(403); //Sends 403 for all cases and login page displays message sent. No need to redirect on client since user not logged in, no need to log out etc.
           }
         });
       }
-      else{
+      else { //403 - Forbidden. Haven't verified password, but user not permitted to login
         res.statusMessage = 'Login not permitted for this account';
         res.sendStatus(403);
       }
     }
-    else {
+    else { //404/401 - idk, user not found
       res.statusMessage = 'User Not Found';
       res.sendStatus(403);
     }
   }
-  else {
+  else { //400 - Missing data
     res.statusMessage = 'Missing Username or Password';
     res.sendStatus(403);
   }
@@ -506,6 +521,35 @@ app.use("/threadsPage", async (req, res) => {
     res.send({
       threads: result,
       threadsCount: threadsCount
+    });
+  });
+});
+
+app.use("/topicsPage", async (req, res) => {
+  let sendDeleted = false;
+  let requestNum = req.body.requestNum;
+  let requestStart = req.body.requestStart;
+  let topicsCount;
+  
+  if(req?.body?.requestDeleted && req?.body?.username) {
+    let v = await sessions.verify(con, req.body.SID, req.body.username, 19); //Verify user has perm to view deleted topics, #19
+    sendDeleted = (v ? true : false);
+  }
+  if(sendDeleted){
+    sql = "SELECT * FROM `topic` ORDER BY `pinned` DESC, `last_activity` DESC LIMIT ? OFFSET ?";
+    topicsCount = await db.countThreads(con, true);
+  }
+  else {
+    sql = "SELECT * FROM `topic` WHERE `deleted` = 0 AND `public` = 1 ORDER BY `pinned` DESC, `last_activity` DESC LIMIT ? OFFSET ?";
+    topicsCount = await db.countThreads(con, false);
+  }
+  db.logAction(con, req.body.username, "topicsPage", '', req.header('X-Real-IP'));
+  console.log("topicsPage - " + (req?.body?.username ? req?.body?.username : " No User"));
+  con.query(sql, [requestNum, requestStart],function (err, result, fields) {
+    if (err) throw err;
+    res.send({
+      topics: result,
+      topicsCount: topicsCount
     });
   });
 });

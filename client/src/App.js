@@ -21,6 +21,7 @@ import NotFound from './components/NotFound';
 import ForgotPassword from './components/Account/ForgotPassword';
 import ResetPassword from './components/Account/ResetPassword';
 import Forbidden from './components/Account/Forbidden';
+import HomeNew from './components/HomeNew';
 
 
 import {
@@ -68,6 +69,7 @@ function App() {
         <br/> 
         <Routes>
           <Route path={"/"} element={<Home sessionData={sessionData} />} />
+          <Route path={"/testing"} element={<HomeNew sessionData={sessionData} setSessionData={setSessionData} />} />
           <Route path={"/signup"} element={<SignUp />} />
           <Route path={"/about"} element={<About sessionData={sessionData} />} />
           <Route path={"/login"} element={<Login sessionData={sessionData} setSessionData={setSessionData} />} />

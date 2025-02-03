@@ -17,6 +17,7 @@ export default function Account({ sessionData, setSessionData }) {
     const [newRoleA, setNewRoleA] = useState();
     const [newRoleS, setNewRoleS] = useState();
     const [roleStatus, setRoleStatus] = useState();
+    let [report, setReport] = useState("");
 
 
 
@@ -70,6 +71,32 @@ export default function Account({ sessionData, setSessionData }) {
             setUploadStatus(false);
         }
     }
+
+    const getReport = async e => {
+        //e.preventDefault();
+        console.log("Report");
+        let url = "https://api.board.dylang140.com/report/site";
+        let c = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(
+                {username: sessionData.user.username, 
+                    SID: sessionData.token})
+        });
+        if(c.status === 403) {
+            //setUploadStatus(false);
+        }
+        else if(c.ok) {
+            setReport(c.json);
+        }
+        else {
+            //setUploadStatus(false);
+        }
+    }
+
+    getReport();
 
     const addRole = async e => {
         e.preventDefault();
@@ -175,6 +202,7 @@ export default function Account({ sessionData, setSessionData }) {
                     {uploadStatus === true ? <label style={{color:"green"}}>&nbsp;Success</label> : ""}
                 </form>
                 {newRoleForm}
+                {report}
             </div>
         );
     }

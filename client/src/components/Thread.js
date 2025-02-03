@@ -13,6 +13,7 @@ export default function Thread({ sessionData }) {
     let [comments, setComments] = useState(0);
     let [threadData, setThreadData] = useState(0);   
     let [forbidden, setForbidden] = useState(false);
+    let [unAuth, setUnAuth] = useState();
     let [noThread, setNoThread] = useState(false);
     let [loadedAndNotForbidden, setLoadedAndNotForbidden] = useState(false);
     let [pfp, setPfp] = useState("");
@@ -35,10 +36,12 @@ export default function Thread({ sessionData }) {
         //console.log('TEST' + sessionData?.user?.administrator);
         if(f.status === 403) {
           setForbidden(true);
-          setLoadedAndNotForbidden(false);
         }
         else if(f.status === 404) {
           setNoThread(true);
+        }
+        else if(f.status === 401) {
+          setUnAuth(true);
         }
         else {
           let res = await f.json();
@@ -98,6 +101,9 @@ export default function Thread({ sessionData }) {
     }
     else if (forbidden === true) {
       return (<Navigate replace to="/forbidden" />);
+    }
+    else if (unAuth === true) {
+      return (<Navigate replace to="/logout" />);
     }
     else if(noThread === true) {
       return (<h1>&nbsp;This thread does not exist</h1>);
