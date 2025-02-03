@@ -15,7 +15,9 @@ export default function Account({ sessionData, setSessionData }) {
     const [newRoleD, setNewRoleD] = useState();
     const [newRoleP, setNewRoleP] = useState();
     const [newRoleA, setNewRoleA] = useState();
+    const [newRoleS, setNewRoleS] = useState();
     const [roleStatus, setRoleStatus] = useState();
+    let [report, setReport] = useState("");
 
 
 
@@ -54,7 +56,10 @@ export default function Account({ sessionData, setSessionData }) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(permTable)
+            body: JSON.stringify(
+                {username: sessionData.user.username, 
+                    SID: sessionData.token,  
+                    table: permTable})
         });
         if(c.status === 403) {
             setUploadStatus(false);
@@ -67,6 +72,32 @@ export default function Account({ sessionData, setSessionData }) {
         }
     }
 
+    const getReport = async e => {
+        //e.preventDefault();
+        console.log("Report");
+        let url = "https://api.board.dylang140.com/report/site";
+        let c = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(
+                {username: sessionData.user.username, 
+                    SID: sessionData.token})
+        });
+        if(c.status === 403) {
+            //setUploadStatus(false);
+        }
+        else if(c.ok) {
+            setReport(c.json);
+        }
+        else {
+            //setUploadStatus(false);
+        }
+    }
+
+    getReport();
+
     const addRole = async e => {
         e.preventDefault();
         console.log("Adding New Role");
@@ -76,7 +107,7 @@ export default function Account({ sessionData, setSessionData }) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({username: sessionData?.user?.username, SID: sessionData.token, roleName: newRoleN, roleDisplayName: newRoleD, rolePriority: newRoleP, roleAbreviation: newRoleA})
+            body: JSON.stringify({username: sessionData?.user?.username, SID: sessionData.token, roleName: newRoleN, roleDisplayName: newRoleD, rolePriority: newRoleP, roleAbreviation: newRoleA, roleSite: newRoleS})
         });
         if(c.status === 403) {
             setRoleStatus(false);
@@ -96,6 +127,8 @@ export default function Account({ sessionData, setSessionData }) {
             <input type="text" name="Role Name" onChange={e => {setNewRoleN(e.target.value)}}/><br/>
             <label>Role Abreviation</label><br/>
             <input type="text" maxLength="4" name="Role Abrev" onChange={e => {setNewRoleA(e.target.value)}}/><br/>
+            <label>Role Site</label><br/>
+            <input type="text" name="Role Site" onChange={e => {setNewRoleS(e.target.value)}}/><br/>
             <label>Role Priority</label><br/>
             <input type="text" name="Role Priority" onChange={e => {setNewRoleP(e.target.value)}}/><br/>
             <label>Role Display Name</label><br/>
@@ -120,14 +153,16 @@ export default function Account({ sessionData, setSessionData }) {
         }
         
         setPermTable(table);
+        console.log(data.perms);
         return(
             <table style={{border: "solid 1px black", borderCollapse: "collapse"}}>
                 <tbody>
                 <tr key='a'>
                     <td style={{border: "solid 1px black", borderCollapse: "collapse"}}>Perm ID</td>
                     <td style={{border: "solid 1px black", borderCollapse: "collapse"}}>Perm Name</td>
+                    <td style={{border: "solid 1px black", borderCollapse: "collapse"}}>Site Name</td>
                     {data.roles.map((role, index) => {
-                        return <td key={index} style={{border: "solid 1px black", borderCollapse: "collapse"}}>{role.roleAbreviation}</td>;
+                        return <td key={index} style={{border: "solid 1px black", borderCollapse: "collapse"}}>{role.roleAbreviation}<p></p>{role.siteName}<p></p>{"P" + role.rolePriority}</td>;
                     })}
                     <td style={{border: "solid 1px black", borderCollapse: "collapse"}}>Permission Description</td>
                 </tr>
@@ -135,7 +170,8 @@ export default function Account({ sessionData, setSessionData }) {
                    return (
                    <tr key={index}>
                         <td key='a' style={{border: "solid 1px black", borderCollapse: "collapse"}}>{data.perms[index].permissionID}</td>
-                        <td key='a' style={{border: "solid 1px black", borderCollapse: "collapse"}}>{data.perms[index].permissionName}</td>
+                        <td key='b' style={{border: "solid 1px black", borderCollapse: "collapse"}}>{data.perms[index].permissionName}</td>
+                        <td key='c' style={{border: "solid 1px black", borderCollapse: "collapse"}}>{data.perms[index].siteName}</td>
                         {i.map((j, indextwo) => {
                             //onChange={e => {let temp = permTable; temp[e.target.value[0]][e.target.value[1]] = (e.target.checked ? )}
                             return (
@@ -166,6 +202,7 @@ export default function Account({ sessionData, setSessionData }) {
                     {uploadStatus === true ? <label style={{color:"green"}}>&nbsp;Success</label> : ""}
                 </form>
                 {newRoleForm}
+                {report}
             </div>
         );
     }

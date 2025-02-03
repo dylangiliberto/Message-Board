@@ -12,6 +12,7 @@ export default function LikeButton({ initial, initCount, comment, threadID, sess
     let [count, setCount] = useState(initCount);
     let [forbidden, setForbidden] = useState(false);
     let [notLoggedIn, setNotLoggedIn] = useState(false);
+    let [unauth, setUnauth] = useState();
 
     const likeComment = async e => {
         e.preventDefault();
@@ -28,6 +29,9 @@ export default function LikeButton({ initial, initCount, comment, threadID, sess
             if(c.status == 403) {
                 setForbidden(true);
             }
+            if(c.status == 401) {
+                setUnauth(true);
+            }
             let json = await c.json();
             //console.log(json);
             setLiked(json.liked);
@@ -43,7 +47,7 @@ export default function LikeButton({ initial, initCount, comment, threadID, sess
     const navigate = useNavigate();
     
 
-    if(!forbidden && notLoggedIn == false) {
+    if(!forbidden && !unauth && notLoggedIn == false) {
         return (
             <table>
                 <tbody>
@@ -63,7 +67,11 @@ export default function LikeButton({ initial, initCount, comment, threadID, sess
         navigate('/login', { state: { redirectTo: location } });
         //return (<Navigate replace to={"/login"} redirectTo={location} />);
     }
-    else {
+    else if(forbidden) {
         return (<Navigate replace to="/forbidden" />);
+    }
+    else if(unauth) {
+        
+        return <Navigate replace to={"/logout"} />;
     }
 }
