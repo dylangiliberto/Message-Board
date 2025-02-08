@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import '../App.css';
-import '../styles/commentViewer.css';
-import Comment from './Comment';
+import '../../App.css';
+import '../../styles/commentViewer.css';
+import Comment from '../Comments/Comment';
 import ThreadHeader from './ThreadHeader';
 import ThreadManager from './ThreadManager';
 import {

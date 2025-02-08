@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../../App.css';
-import DisplayNameUpdater from './DisplayNameUpdater';
+import DisplayNameUpdater from './Components/DisplayNameUpdater';
 import perms from '../../utilities/perms';
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import '../../App.css';
+import '../../../App.css';
 
 export default function DisplayNameUpdater({ sessionData, setSessionData, setData }) {
     let [newDisplayName, setNewDisplayName] = useState();
@@ -14,7 +14,7 @@ export default function DisplayNameUpdater({ sessionData, setSessionData, setDat
                 let sendData = {username: sessionData?.user?.username,
                                 SID: sessionData?.token,
                                 newName: newDisplayName,
-                                newHexCode: newHexCode};
+                                newHexCode: (newHexCode ? newHexCode : '')};
                 const url = "https://api.board.dylang140.com/updateDisplayName";
                 response = await fetch(url, {
                     method: 'POST',
@@ -24,6 +24,8 @@ export default function DisplayNameUpdater({ sessionData, setSessionData, setDat
             }
             catch {
                 setSuccess(false);
+                setNewDisplayName("");
+                setNewHexCode("");
             }
             if(response?.status !== 200) {
                 setSuccess(false);

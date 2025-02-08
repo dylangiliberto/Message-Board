@@ -405,10 +405,10 @@ function updateUsername(con, newName, username) {
 }
 
 function updateDisplayName(con, newName, username, hex) {
-    if(hex) {
+    if(hex != "") {
         try {
             let sql = "UPDATE `users` SET `displayName` = ?, `displayNameHex` = ? WHERE `username` = ? LIMIT 1";
-            console.log("Set new Display Name for " + username + "!");
+            console.log("Set new Display Name for " + username + "!" );
             con.query(sql, [newName, hex, username]);
         }
         catch {
@@ -419,7 +419,7 @@ function updateDisplayName(con, newName, username, hex) {
         try {
             let sql = "UPDATE `users` SET `displayName` = ? WHERE `username` = ? LIMIT 1";
             console.log("Set new Display Name for " + username + "!");
-            con.query(sql, [newName, hex, username]);
+            con.query(sql, [newName, username]);
         }
         catch {
             console.log("Error updating display name!");

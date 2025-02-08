@@ -1,4 +1,4 @@
-import UserProfileDisplay from "./UserProfileDisplay";
+import UserProfileDisplay from "../Account/UserProfileDisplay";
 import React, { useEffect, useState } from 'react';
 import {
     useParams,

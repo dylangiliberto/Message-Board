@@ -3,25 +3,27 @@ import './App.css';
 import NavBarMain from './components/NavBar/NavBarMain';
 import Header from './components/Header';
 import Home from './components/Home';
-import About from './components/About';
+import About from './components/Pages/About';
 import Login from './components/Account/Login';
 import Account from './components/Account/Account';
-import useSession from './components/Account/useSession';
-import ErrorPage from './components/ErrorPage';
+import useSession from './components/Account/Components/useSession';
+import ErrorPage from './components/Pages/ErrorPage';
 import Root from './components/root';
 import Logout from './components/Account/Logout';
-import SignUp from './components/SignUp';
+import SignUp from './components/Account/SignUp';
 import UserAccount from './components/Profiles/UserAccount';
 import Footer from './components/Footer';
-import NewThread from './components/NewThread';
-import Post from './components/Post';
+import NewThread from './components/Threads/NewThread';
+import Post from './components/Threads/Post';
 import Admin from './components/Admin/Admin';
 import ViewLogs from './components/Admin/ViewLogs';
-import NotFound from './components/NotFound';
+import NotFound from './components/Pages/NotFound';
 import ForgotPassword from './components/Account/ForgotPassword';
 import ResetPassword from './components/Account/ResetPassword';
-import Forbidden from './components/Account/Forbidden';
+import Forbidden from './components/Pages/Forbidden';
 import HomeNew from './components/HomeNew';
+import Thread from './components/Threads/Thread';
+
 
 
 import {
@@ -32,7 +34,6 @@ import {
   createBrowserRouter,
   RouterProvider
 } from "react-router-dom";
-import Thread from './components/Thread';
 
 function App() {
   const { sessionData, setSessionData } = useSession();

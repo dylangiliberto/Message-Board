@@ -212,7 +212,7 @@ app.use("/forgotpassword", async (req, res) => {
   let username = req.body.username;
   let taken = await db.doesUserExist(con, username);
   if(username && taken) {
-    let resetPerm = await perms.checkUserPerm(con, username, 13); //Verfiy user has permission to reset password
+    let resetPerm = await perms.checkUserPerm(con, username, 13); //Verfiy user has permission #13 to reset password
     if(resetPerm) {
       let recent = await sessions.recentRequest(con, username);
       
@@ -250,7 +250,7 @@ app.use("/resetpassword", async (req, res) => {
     let data = await sessions.getResetRequest(con, username);
     console.log(data);
     if(data[0]?.username == username) {
-      let resetPerm = await perms.checkUserPerm(con, username, 13); //Verfiy user has permission to reset password
+      let resetPerm = await perms.checkUserPerm(con, username, 13); //Verfiy user has permission #13 to reset password
       if(resetPerm) {
         if(new Date(data[0]?.date_expiry) >= Date.now()){
           db.logAction(con, username, "Password Reset: Success", req.header('X-Real-IP'));
@@ -289,6 +289,7 @@ app.use("/postComment", upload.single('image'), async (req, res) => {
   let user = req.body.username;
   let SID = req.body.SID;
   let thread = req.body.thread;
+  let tags = req.body.tags;
   if(user && SID && thread) {
     let [verifiedPerm, verified] = await sessions.verify(con, SID, user, 3); //Verfiy user + perm #3, postComment
     let file = req.file ? req.file.path : "No Image";
@@ -297,10 +298,16 @@ app.use("/postComment", upload.single('image'), async (req, res) => {
     if(verifiedPerm === true && user && (req.body.comment || file) && thread){
       db.logAction(con, user, "postComment", thread, req.header('X-Real-IP'));
       console.log("postComment - " + (req?.body?.username ? req?.body?.username : " No User") + file);
+      
       db.postComment(con, req.body.comment, thread, user, file);
         //const imagePath = req.file.path;
         //db.postComment(con, req.body.comment, thread, user, imagePath);
       let comments = await db.getComments(con, thread, user, req.body.requestDeleted);
+      /*
+      Array.from(tags).map(row => {
+        mail.logNotification(con, row, "", user, "tag", comments[0].ID, null);
+      });
+      */
       res.send(comments);
     }
     else if (verified) {
@@ -334,21 +341,39 @@ app.use("/deleteComment", async (req, res) => {
   let SID = req.body.SID;
   let thread = req.body.thread;
   let setDeleted = req.body.setDeleted;
-  let [verifiedPerm, verified] = await sessions.verify(con, SID, user);
-  let author = await db.isCommentAuthor(con, comment, user);
-  let admin = await db.isAdministrator(con, user);
   
-  if(comment && user && SID && thread && verified && (author || admin)){
-    db.logAction(con, req.body.username, "deleteComment", comment.ID, req.header('X-Real-IP'));
-    console.log("Deleteing/Restoring Comment ID: " + comment.ID + " User: " + user + " SID: " + SID + "SetDeleted: " + setDeleted);
-    db.deleteComment(con, setDeleted, comment.ID, thread);
-    let comments = await db.getComments(con, thread, user, req.body.requestDeleted);
-    res.send(comments);
+  if(comment && user && SID && thread){
+    let author = await db.isCommentAuthor(con, comment, user);
+    let [verifiedPerm, verified] = [false, false];
+    if(author) {
+      [verifiedPerm, verified] = await sessions.verify(con, SID, user, 4); //Verify perm #4, delete own comment
+    }
+    else {
+      [verifiedPerm, verified] = await sessions.verify(con, SID, user, 9); //Verify perm #9, delete others comment
+    }
+    if(verifiedPerm){
+      db.logAction(con, req.body.username, "deleteComment", comment.ID, req.header('X-Real-IP'));
+      console.log("Deleteing/Restoring Comment ID: " + comment.ID + " User: " + user + " SID: " + SID + "SetDeleted: " + setDeleted);
+      db.deleteComment(con, setDeleted, comment.ID, thread);
+      let comments = await db.getComments(con, thread, user, req.body.requestDeleted);
+      res.send(comments);
+    }
+    else {
+      if(verified) {
+        console.log("Could not delete a comment...");
+        res.sendStatus(403); //No Perm
+      }
+      else {
+        console.log("Could not delete a comment...");
+        res.sendStatus(401); //Not logged in
+      }
+    }
   }
   else {
     console.log("Could not delete a comment...");
-    res.sendStatus(403);
+    res.sendStatus(400); //No data
   }
+  
 });
 
 app.use("/deleteCommentPerm", async (req, res) => {
@@ -424,36 +449,41 @@ app.use("/login", async (req, res) => {
 
 app.use("/logAdminOtherUser", async (req, res) => {
   if(req.body.username && req.body.SID){
-    let [verifiedPerm, verified] = await sessions.verify(con, req.body.SID, req.body.username) || false;
-    let isAdmin = await db.isAdministrator(con, req.body.username);
-    console.log("login admin as user - " + req?.body?.username + " as " + req?.body?.targetUsername);
-    let user = await db.getUserData(con, req.body.targetUsername).then(function(rows) {
-      return rows;
-    });
-    if(user.username === req.body.targetUsername && verified && isAdmin) {
-      db.logAction(con, req.body.username, "login admin as user", req?.body?.targetUsername, req.header('X-Real-IP'));
-      let token = await sessions.generateSID(con);
-      let perms = await db.getUserPermissions(con, req.body.username);
-
-      
-      if(verified) {
-        console.log("User " + req.body.username + " logged in as " + req?.body?.targetUsername);
-        sessions.registerSID(con, token, req.body.targetUsername);
-        res.send({
-          user: user,
-          permissions: perms,
-          token: token
-        });
+    let [verifiedPerm, verified] = await sessions.verify(con, req.body.SID, req.body.username, 20); //Check perm #20, logInAsOtherUser
+    if(verifiedPerm)  {
+      console.log("login admin as user - " + req?.body?.username + " as " + req?.body?.targetUsername);
+      let user = await db.getUserData(con, req.body.targetUsername).then(function(rows) {
+        return rows;
+      });
+      if(user.username === req.body.targetUsername) {
+        db.logAction(con, req.body.username, "login admin as user", req?.body?.targetUsername, req.header('X-Real-IP'));
+        let token = await sessions.generateSID(con);
+        let permissions = await perms.getUserPerms(con, req.body.username);
+  
+        
+        if(verified) {
+          console.log("User " + req.body.username + " logged in as " + req?.body?.targetUsername);
+          sessions.registerSID(con, token, req.body.targetUsername);
+          res.send({
+            user: user,
+            permissions: permissions,
+            token: token
+          });
+        }
+      }
+      else {
+        res.statusMessage = 'User Not Found';
+        res.sendStatus(404);
       }
     }
     else {
-      res.statusMessage = 'User Not Found';
+      res.statusMessage = 'No Permission';
       res.sendStatus(403);
     }
   }
   else {
     res.statusMessage = 'Missing Username or Password';
-    res.sendStatus(403);
+    res.sendStatus(400);
   }
 });
 

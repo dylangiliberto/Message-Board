@@ -22,6 +22,18 @@ async function sendMail(mailer, address, subject, body){
       console.log("Message sent: %s", blah.messageId);
 }
 
+async function logNotification(con, username, email, triggeredBy, reason, commentID, postID){
+  let sql = "INSERT INTO `notifications` (`username`, `email`, `triggeredBy`, `reason`, `commentID`, `postID`) VALUES (?,?,?,?,?,?);"
+  return new Promise(function(resolve, reject) {
+    con.query(sql, [username, email, triggeredBy, reason, commentID, postID], function(error, result) {
+        if(error) {
+            reject(error);
+        }
+        resolve();
+    });
+});
+}
 
-module.exports = { sendMail };
+
+module.exports = { sendMail, logNotification };
 

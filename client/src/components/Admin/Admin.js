@@ -96,7 +96,7 @@ export default function Account({ sessionData, setSessionData }) {
         }
     }
 
-    getReport();
+    //getReport();
 
     const addRole = async e => {
         e.preventDefault();
@@ -202,7 +202,6 @@ export default function Account({ sessionData, setSessionData }) {
                     {uploadStatus === true ? <label style={{color:"green"}}>&nbsp;Success</label> : ""}
                 </form>
                 {newRoleForm}
-                {report}
             </div>
         );
     }

@@ -12,6 +12,7 @@ export default function UserAdminControls({ sessionData, setSessionData, usernam
     const [redirect, setRedirect] = useState(false);
     const [passSuccess, setPassSuccess] = useState();
     const [userRoles, setUserRoles] = useState();
+    let [forbidden, setForbidden] = useState();
 
     useEffect(() => {
         let url = "https://api.board.dylang140.com/userAdmin";
@@ -141,6 +142,9 @@ export default function UserAdminControls({ sessionData, setSessionData, usernam
             setSessionData(result);
             setRedirect(true);
         }
+        else if (c.status === 403) {
+            setForbidden(true);
+        }
     }
 
     let rolesList = (
@@ -195,7 +199,7 @@ export default function UserAdminControls({ sessionData, setSessionData, usernam
         </form>
     );
 
-    if(data?.locked != null && redirect == false) {
+    if(forbidden != true && data?.locked != null && redirect == false) {
         return (
             <div>
                 <h2>Admin Controls</h2>
@@ -225,6 +229,9 @@ export default function UserAdminControls({ sessionData, setSessionData, usernam
     }
     else if(redirect == true) {
         return <Navigate to='/' />;
+    }
+    else if(forbidden) {
+        return (<Navigate replace to='/forbidden' />);
     }
     else {
         return <div></div>;

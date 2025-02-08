@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import useToken from './Account/useSession';
-import Login from './Account/Login';
-import '../App.css';
-import '../styles/newThread.css';
+import useToken from '../Account/Components/useSession';
+import Login from '../Account/Login';
+import '../../App.css';
+import '../../styles/newThread.css';
 import {
   Navigate,
 } from "react-router-dom";
